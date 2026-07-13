@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArznStoreSP | Painel de Pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000;
+    --card:#0d0d0d;
+    --card-hover:#181818;
+    --border:#2a2a2a;
+    --text:#ffffff;
+    --muted:#8a8a8a;
+    --orange:#FF6A00;
+    --glow:rgba(255,106,0,0.45);
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  .ico{display:inline-flex;align-items:center;vertical-align:middle}
+  .ico svg{width:1em;height:1em;display:block}
+  body{
+    background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,.display{ font-family:'Syne', sans-serif; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 24px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:rgba(13,13,20,0.92); backdrop-filter:blur(10px); z-index:20;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background:#000; border:1px solid var(--orange); color:var(--orange); box-shadow:0 0 12px var(--glow);
+    display:flex; align-items:center; justify-content:center; font-family:'Syne'; font-weight:800;
+  }
+  .brand-title{ font-family:'Syne'; font-weight:700; font-size:17px; }
+  .brand-sub{ font-size:11px; color:var(--muted); margin-top:-2px; }
+
+  #refresh-btn{
+    background:var(--card); border:1px solid var(--border); color:var(--text);
+    padding:9px 16px; border-radius:10px; font-weight:600; font-size:13px; cursor:pointer;
+  }
+  #refresh-btn:hover{ border-color:var(--orange); }
+
+  .board{
+    display:grid; grid-template-columns:repeat(4, minmax(260px,1fr));
+    gap:16px; padding:20px 24px; overflow-x:auto; align-items:start;
+  }
+  @media(max-width:900px){ .board{ grid-template-columns:1fr; } }
+
+  .column{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    min-height:200px; display:flex; flex-direction:column;
+  }
+  .column-header{
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border);
+  }
+  .column-title{ font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; }
+  .dot{ width:8px; height:8px; border-radius:50%; }
+  .col-novo .dot{ background:var(--muted); }
+  .col-producao .dot{ background:var(--orange); }
+  .col-pronto .dot{ background:var(--orange); box-shadow:0 0 6px var(--glow); }
+  .col-entregue .dot{ background:#fff; }
+  .column-count{ background:rgba(255,255,255,0.06); color:var(--muted); font-size:12px; padding:2px 8px; border-radius:8px; }
+
+  .column-body{ padding:10px; display:flex; flex-direction:column; gap:10px; min-height:80px; flex:1; }
+  .column-body.drag-over{ background:rgba(255,107,0,0.06); border-radius:0 0 var(--radius) var(--radius); }
+
+  .card{
+    background:var(--card-hover); border:1px solid var(--border); border-radius:11px;
+    padding:12px 14px; cursor:grab; transition:.15s;
+  }
+  .card:hover{ border-color:var(--orange); }
+  .card.dragging{ opacity:0.4; }
+  .card-id{ font-size:11px; color:var(--muted); font-family:'DM Sans'; }
+  .card-nome{ font-weight:700; font-size:14px; margin-top:2px; }
+  .card-itens{ color:var(--muted); font-size:12px; margin-top:6px; line-height:1.4; }
+  .card-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+  .card-total{ font-family:'Syne'; font-weight:800; font-size:14px; }
+  .card-time{ font-size:11px; color:var(--muted); }
+
+  .empty-col{ color:var(--muted); font-size:12px; text-align:center; padding:24px 10px; }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--bg); border:1px solid var(--border); border-radius:16px;
+    width:100%; max-width:420px; max-height:85vh; overflow-y:auto; padding:22px; position:relative;
+  }
+  .modal-close{
+    position:absolute; top:14px; right:14px; background:var(--card); border:1px solid var(--border);
+    color:var(--text); width:30px; height:30px; border-radius:50%; cursor:pointer;
+  }
+  .modal h2{ font-size:19px; margin-bottom:4px; }
+  .modal .sub{ color:var(--muted); font-size:13px; margin-bottom:16px; }
+  .info-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border); font-size:13px; }
+  .info-row span:first-child{ color:var(--muted); }
+  .item-line{ display:flex; justify-content:space-between; font-size:13px; padding:6px 0; }
+  .total-line{ display:flex; justify-content:space-between; font-family:'Syne'; font-weight:800; font-size:17px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .whats-link{
+    display:block; text-align:center; margin-top:16px; background:var(--orange); color:#000;
+    padding:12px; border-radius:10px; font-weight:800; text-decoration:none; font-size:14px;
+  }
+  .loading{ color:var(--muted); text-align:center; padding:60px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">A</div>
+    <div>
+      <div class="brand-title">Painel de Pedidos</div>
+      <div class="brand-sub">ArznStoreSP Personalizados</div>
+    </div>
+  </div>
+  <button id="refresh-btn" onclick="carregarPedidos()"><span class="ico" id="ico-refresh"></span> Atualizar</button>
+</header>
+
+<div class="board" id="board">
+  <div class="loading">Carregando pedidos...</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>'
+};
+function icon(n){return `<span class="ico">${ICONS[n]||''}</span>`;}
+/* ============ CONFIGURAÇÃO ============ */
+const CONFIG = {
+  // Cole aqui a mesma URL do Apps Script usada no catalogo.html (termina em /exec)
+  API_URL: ''
+};
+
+const COLUNAS = [
+  { status:'Novo', label:'Novo', cls:'col-novo' },
+  { status:'Em Produção', label:'Em Produção', cls:'col-producao' },
+  { status:'Pronto', label:'Pronto', cls:'col-pronto' },
+  { status:'Entregue', label:'Entregue', cls:'col-entregue' }
+];
+
+/* Pedidos de exemplo (usados se CONFIG.API_URL estiver vazio) */
+const PEDIDOS_EXEMPLO = [
+  { id:'PED-260712-0001', timestamp:new Date().toISOString(), status:'Novo', cliente_nome:'Maria Souza', cliente_telefone:'11988887777',
+    itens:[{nome:'Caneca de Porcelana Personalizada', variacao:'325ml', precoUnit:29.9, qtd:2}], total:59.8, observacoes:'Entregar até sexta' },
+  { id:'PED-260711-0007', timestamp:new Date(Date.now()-86400000).toISOString(), status:'Em Produção', cliente_nome:'João Lima', cliente_telefone:'11977776666',
+    itens:[{nome:'Camiseta Personalizada', variacao:'G/GG', precoUnit:54.9, qtd:3}], total:164.7, observacoes:'' },
+  { id:'PED-260710-0002', timestamp:new Date(Date.now()-2*86400000).toISOString(), status:'Pronto', cliente_nome:'Studio X', cliente_telefone:'11966665555',
+    itens:[{nome:'Chaveiro Acrílico Personalizado', variacao:'Redondo 4cm', precoUnit:12.9, qtd:10}], total:129.0, observacoes:'Kit para evento' }
+];
+
+let pedidos = [];
+let draggedId = null;
+
+async function carregarPedidos(){
+  const board = document.getElementById('board');
+  board.innerHTML = '<div class="loading">Carregando pedidos...</div>';
+  if(!CONFIG.API_URL){
+    pedidos = JSON.parse(JSON.stringify(PEDIDOS_EXEMPLO));
+    renderBoard();
+    return;
+  }
+  try{
+    const res = await fetch(`${CONFIG.API_URL}?action=pedidos`);
+    const data = await res.json();
+    pedidos = data.pedidos || [];
+  }catch(e){
+    console.error('Erro ao carregar pedidos, usando exemplo:', e);
+    pedidos = JSON.parse(JSON.stringify(PEDIDOS_EXEMPLO));
+  }
+  renderBoard();
+}
+
+function fmt(v){ return 'R$ ' + Number(v).toFixed(2).replace('.',','); }
+function fmtData(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+
+function renderBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = COLUNAS.map(col => {
+    const itens = pedidos.filter(p => p.status === col.status);
+    return `
+      <div class="column">
+        <div class="column-header ${col.cls}">
+          <div class="column-title"><span class="dot"></span>${col.label}</div>
+          <div class="column-count">${itens.length}</div>
+        </div>
+        <div class="column-body" data-status="${col.status}"
+             ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave(event)">
+          ${itens.length===0 ? '<div class="empty-col">Nenhum pedido aqui</div>' : itens.map(p => cardHTML(p)).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // liga eventos de drag em cada card
+  document.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('dragstart', e=>{
+      draggedId = card.dataset.id;
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', e=>{
+      card.classList.remove('dragging');
+    });
+  });
+}
+
+function cardHTML(p){
+  const resumoItens = p.itens.slice(0,2).map(i=>`${i.qtd}x ${i.nome}`).join(', ') + (p.itens.length>2 ? '…' : '');
+  return `
+    <div class="card" draggable="true" data-id="${p.id}" onclick="abrirPedido('${p.id}')">
+      <div class="card-id">${p.id}</div>
+      <div class="card-nome">${p.cliente_nome}</div>
+      <div class="card-itens">${resumoItens}</div>
+      <div class="card-footer">
+        <div class="card-total">${fmt(p.total)}</div>
+        <div class="card-time">${fmtData(p.timestamp)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function onDragOver(e){
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+async function onDrop(e){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const novoStatus = e.currentTarget.dataset.status;
+  const pedido = pedidos.find(p=>p.id===draggedId);
+  if(!pedido || pedido.status===novoStatus) return;
+  pedido.status = novoStatus;
+  renderBoard();
+  if(CONFIG.API_URL){
+    try{
+      await fetch(CONFIG.API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({ action:'atualizarStatus', id:pedido.id, status:novoStatus })
+      });
+    }catch(err){
+      console.error('Erro ao atualizar status:', err);
+    }
+  }
+}
+
+function abrirPedido(id){
+  const p = pedidos.find(x=>x.id===id);
+  const itensHTML = p.itens.map(i => {
+    const extrasTotal = (i.extras||[]).reduce((s,e)=>s+e.preco,0);
+    const extrasTxt = i.extras && i.extras.length ? ` + ${i.extras.map(e=>e.nome).join(', ')}` : '';
+    return `<div class="item-line"><span>${i.qtd}x ${i.nome} (${i.variacao})${extrasTxt}</span><span>${fmt(i.precoUnit*i.qtd + extrasTotal)}</span></div>`;
+  }).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <h2>${p.id}</h2>
+    <div class="sub">${fmtData(p.timestamp)} · ${p.status}</div>
+    <div class="info-row"><span>Cliente</span><span>${p.cliente_nome}</span></div>
+    <div class="info-row"><span>WhatsApp</span><span>${p.cliente_telefone}</span></div>
+    ${p.cep ? `<div class="info-row"><span>CEP</span><span>${p.cep}</span></div>` : ''}
+    ${p.frete_regiao ? `<div class="info-row"><span>Região</span><span>${p.frete_regiao}</span></div>` : ''}
+    ${p.observacoes ? `<div class="info-row"><span>Obs.</span><span>${p.observacoes}</span></div>` : ''}
+    <div style="margin-top:14px;">${itensHTML}</div>
+    ${Number(p.desconto)>0 ? `<div class="item-line" style="color:var(--orange)"><span>Cupom ${p.cupom||''}</span><span>− ${fmt(p.desconto)}</span></div>` : ''}
+    ${Number(p.frete)>0 ? `<div class="item-line"><span>Frete</span><span>${fmt(p.frete)}</span></div>` : ''}
+    <div class="total-line"><span>Total</span><span>${fmt(p.total)}</span></div>
+    <a class="whats-link" target="_blank" href="https://wa.me/55${p.cliente_telefone.replace(/\D/g,'')}">Responder no WhatsApp</a>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+
+const ir=document.getElementById('ico-refresh'); if(ir) ir.innerHTML=icon('refresh');
+carregarPedidos();
+</script>
+</body>
+</html>
