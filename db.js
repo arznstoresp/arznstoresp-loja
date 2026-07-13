@@ -9,8 +9,8 @@
    os dados são as RLS policies do banco (ver supabase-schema.sql).
    ============================================================ */
 
-const SUPABASE_URL = '';       // ex: https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = '';  // a chave "anon public"
+const SUPABASE_URL = 'https://thpzvkxoqrhqydqzdffv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_E2YLvIuSANlr0YkaR0uguw_SDwM44eg';
 const STORAGE_BUCKET = 'produtos';
 
 // Cria o cliente (a lib supabase-js é carregada via <script> antes deste arquivo)
