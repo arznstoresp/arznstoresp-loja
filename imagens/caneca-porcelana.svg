@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450" viewBox="0 0 600 450">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.5">
+      <stop offset="0" stop-color="#FF6A00" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FF6A00" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#FF6A00" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="600" height="450" fill="url(#bg)"/>
+  <rect width="600" height="450" fill="url(#grid)"/>
+  <rect width="600" height="450" fill="url(#glow)"/>
+
+  <!-- moldura de canto (estética futurista) -->
+  <path d="M 24 60 V 24 H 60" fill="none" stroke="#FF6A00" stroke-width="2" stroke-opacity="0.5"/>
+  <path d="M 576 60 V 24 H 540" fill="none" stroke="#FF6A00" stroke-width="2" stroke-opacity="0.5"/>
+  <path d="M 24 390 V 426 H 60" fill="none" stroke="#FF6A00" stroke-width="2" stroke-opacity="0.5"/>
+  <path d="M 576 390 V 426 H 540" fill="none" stroke="#FF6A00" stroke-width="2" stroke-opacity="0.5"/>
+
+  <!-- ícone do produto -->
+  <g transform="translate(300 185)" fill="none" stroke="#FF6A00" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    
+    <rect x="-40" y="-30" width="60" height="56" rx="8"/>
+    <path d="M 20 -16 h 12 a 14 14 0 0 1 0 28 h -12"/>
+  </g>
+
+  <!-- nome do produto -->
+  <text x="300" y="320" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="1">CANECA</text>
+  <rect x="266" y="336" width="68" height="3" fill="#FF6A00"/>
+  <text x="300" y="372" text-anchor="middle" fill="#8a8a8a" font-family="Arial, sans-serif" font-size="14" letter-spacing="3">ARZNSTORESP</text>
+</svg>

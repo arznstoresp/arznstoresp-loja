@@ -6,6 +6,8 @@
 <title>ArznStoreSP | Admin de Produtos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db.js"></script>
 <style>
   :root{
     --bg:#000000; --card:#0d0d0d; --card-hover:#181818; --border:#2a2a2a;
@@ -174,7 +176,9 @@
   <div class="login-box">
     <div class="brand-mark">A</div>
     <h2>Painel de Produtos</h2>
-    <p>Digite a senha de administrador para continuar.</p>
+    <p>Entre com seu e-mail e senha de administrador.</p>
+    <input type="email" id="email-input" placeholder="E-mail" onkeydown="if(event.key==='Enter')entrar()">
+    <div style="height:10px"></div>
     <input type="password" id="senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()">
     <div style="height:12px"></div>
     <button class="btn btn-primary" style="width:100%" onclick="entrar()">Entrar</button>
@@ -352,10 +356,8 @@ const ICONS = {
 function icon(nome){ return `<span class="ico">${ICONS[nome]||''}</span>`; }
 
 const CONFIG = {
-  // Mesma URL do Apps Script usada no catalogo.html (termina em /exec).
-  API_URL: '',
-  // Deve ser IGUAL à ADMIN_SENHA do Code.gs.
-  // (A senha real fica no backend; aqui ela só é enviada para validação.)
+  // As chaves do Supabase ficam no db.js (compartilhado com o catálogo).
+  // Este painel usa autenticação por e-mail/senha do Supabase.
 };
 
 /* Produtos de exemplo (usados se API_URL estiver vazio — modo demonstração) */
@@ -371,22 +373,33 @@ const PRODUTOS_EXEMPLO = [
     extras:[{nome:'Criação de arte',preco:25}], prazoProducao:'3 dias úteis', qtdMinima:1, ativo:true }
 ];
 
-let senha = '';
 let produtos = [];
 let imagensProduto = []; // URLs das imagens do produto sendo editado no form
 
-/* ============ LOGIN ============ */
-function entrar(){
+/* ============ LOGIN (Supabase Auth) ============ */
+async function entrar(){
+  const email = document.getElementById('email-input').value.trim();
   const val = document.getElementById('senha-input').value;
-  if(!val){ document.getElementById('login-msg').textContent='Digite a senha.'; return; }
-  senha = val;
-  // Guarda na sessão pra não pedir de novo a cada reload
-  try{ sessionStorage.setItem('admin_senha', senha); }catch(e){}
-  mostrarApp();
+  const msgEl = document.getElementById('login-msg');
+  if(!email || !val){ msgEl.textContent='Preencha e-mail e senha.'; return; }
+
+  // Modo demonstração (sem Supabase configurado): entra direto
+  if(!dbPronto()){
+    mostrarApp();
+    return;
+  }
+
+  msgEl.textContent = 'Entrando...';
+  const r = await dbLogin(email, val);
+  if(r.ok){
+    msgEl.textContent = '';
+    mostrarApp();
+  }else{
+    msgEl.textContent = 'E-mail ou senha incorretos.';
+  }
 }
-function sair(){
-  senha='';
-  try{ sessionStorage.removeItem('admin_senha'); }catch(e){}
+async function sair(){
+  if(dbPronto()) await dbLogout();
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='block';
   document.getElementById('senha-input').value='';
@@ -394,7 +407,7 @@ function sair(){
 function mostrarApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-  if(!CONFIG.API_URL) document.getElementById('demo-banner').style.display='block';
+  if(!dbPronto()) document.getElementById('demo-banner').style.display='block';
   carregarProdutos();
 }
 
@@ -402,15 +415,13 @@ function mostrarApp(){
 async function carregarProdutos(){
   const lista = document.getElementById('prod-list');
   lista.innerHTML = '<div class="loading">Carregando...</div>';
-  if(!CONFIG.API_URL){
+  if(!dbPronto()){
     produtos = JSON.parse(JSON.stringify(PRODUTOS_EXEMPLO));
     renderLista();
     return;
   }
   try{
-    const res = await fetch(`${CONFIG.API_URL}?action=produtosAdmin`);
-    const data = await res.json();
-    produtos = data.produtos || [];
+    produtos = await dbGetProdutosAdmin();
   }catch(e){
     console.error(e);
     produtos = JSON.parse(JSON.stringify(PRODUTOS_EXEMPLO));
@@ -566,16 +577,6 @@ function removerImagem(i){
   renderThumbs();
 }
 
-// Lê um arquivo como base64 (sem o prefixo data:)
-function lerArquivoBase64(file){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = ()=> resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 async function uploadArquivos(files){
   if(!files || files.length===0) return;
 
@@ -584,7 +585,7 @@ async function uploadArquivos(files){
     if(file.size > 8*1024*1024){ showToast('Imagem muito grande (máx 8MB).', true); continue; }
 
     // Modo demonstração: mostra a imagem local sem enviar
-    if(!CONFIG.API_URL){
+    if(!dbPronto()){
       const urlLocal = URL.createObjectURL(file);
       imagensProduto.push(urlLocal);
       renderThumbs();
@@ -597,17 +598,12 @@ async function uploadArquivos(files){
     const idxSpinner = imagensProduto.length - 1;
 
     try{
-      const base64 = await lerArquivoBase64(file);
-      const res = await fetch(CONFIG.API_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain'},
-        body: JSON.stringify({ action:'uploadImagem', senha, dados:base64, tipo:file.type, nome:file.name })
-      });
-      const data = await res.json();
+      const data = await dbUploadImagem(file);
       if(data.ok && data.url){
         imagensProduto[idxSpinner] = data.url;
       }else{
         imagensProduto.splice(idxSpinner,1);
-        showToast(data.error==='Senha incorreta' ? 'Senha incorreta. Faça login de novo.' : 'Falha no upload.', true);
+        showToast('Falha no upload: ' + (data.error||''), true);
       }
     }catch(e){
       imagensProduto.splice(idxSpinner,1);
@@ -695,7 +691,7 @@ async function salvar(){
   const btn = document.getElementById('btn-salvar');
   btn.disabled = true; btn.textContent = 'Salvando...';
 
-  if(!CONFIG.API_URL){
+  if(!dbPronto()){
     // Modo demonstração: salva só na memória
     if(p.id){
       const idx = produtos.findIndex(x=>String(x.id)===String(p.id));
@@ -711,17 +707,13 @@ async function salvar(){
   }
 
   try{
-    const res = await fetch(CONFIG.API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'salvarProduto', senha, produto:p })
-    });
-    const data = await res.json();
+    const data = await dbSalvarProduto(p);
     if(data.ok){
       fecharForm();
       await carregarProdutos();
       showToast(data.editado ? 'Produto atualizado' : 'Produto cadastrado');
     }else{
-      showToast(data.error==='Senha incorreta' ? 'Senha incorreta. Faça login de novo.' : ('Erro: '+data.error), true);
+      showToast('Erro: '+data.error, true);
     }
   }catch(e){
     showToast('Erro de conexão ao salvar.', true);
@@ -734,18 +726,14 @@ async function excluir(id){
   if(!p) return;
   if(!confirm(`Excluir "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
 
-  if(!CONFIG.API_URL){
+  if(!dbPronto()){
     produtos = produtos.filter(x=>String(x.id)!==String(id));
     renderLista();
     showToast('Excluído (modo demonstração)');
     return;
   }
   try{
-    const res = await fetch(CONFIG.API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'excluirProduto', senha, id })
-    });
-    const data = await res.json();
+    const data = await dbExcluirProduto(id);
     if(data.ok){ await carregarProdutos(); showToast('Produto excluído'); }
     else showToast('Erro: '+data.error, true);
   }catch(e){ showToast('Erro de conexão ao excluir.', true); }
@@ -757,14 +745,12 @@ async function abrirMetricas(){
   const el = document.getElementById('metricas-content');
   el.innerHTML = '<div class="loading">Carregando...</div>';
 
-  if(!CONFIG.API_URL){
-    el.innerHTML = '<div class="vazio">As métricas aparecem quando o catálogo está publicado e conectado.<br>No modo demonstração não há dados reais para mostrar.</div>';
+  if(!dbPronto()){
+    el.innerHTML = '<div class="vazio">As métricas aparecem quando a loja está publicada e conectada.<br>No modo demonstração não há dados reais para mostrar.</div>';
     return;
   }
   try{
-    const res = await fetch(`${CONFIG.API_URL}?action=metricas`);
-    const data = await res.json();
-    const m = data.metricas;
+    const m = await dbGetMetricas();
     el.innerHTML = renderMetricas(m);
   }catch(e){
     el.innerHTML = '<div class="vazio">Não foi possível carregar as métricas agora.</div>';
@@ -815,12 +801,14 @@ function showToast(msg, erro){
 }
 
 /* ============ INIT ============ */
-(function(){
+(async function(){
   const m=document.getElementById('ico-metricas'); if(m) m.innerHTML=icon('chart');
   const w=document.getElementById('ico-warn'); if(w) w.innerHTML=icon('warning');
   const u=document.getElementById('ico-upload'); if(u) u.innerHTML=icon('upload');
-  const salva = (()=>{ try{ return sessionStorage.getItem('admin_senha'); }catch(e){ return null; } })();
-  if(salva){ senha = salva; mostrarApp(); }
+  // Se já houver sessão ativa do Supabase, entra direto
+  if(dbPronto()){
+    try{ const user = await dbUsuarioLogado(); if(user) mostrarApp(); }catch(e){}
+  }
 })();
 </script>
 </body>

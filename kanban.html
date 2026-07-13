@@ -6,6 +6,8 @@
 <title>ArznStoreSP | Painel de Pedidos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db.js"></script>
 <style>
   :root{
     --bg:#000000;
@@ -144,8 +146,7 @@ const ICONS = {
 function icon(n){return `<span class="ico">${ICONS[n]||''}</span>`;}
 /* ============ CONFIGURAÇÃO ============ */
 const CONFIG = {
-  // Cole aqui a mesma URL do Apps Script usada no catalogo.html (termina em /exec)
-  API_URL: ''
+  // As chaves do Supabase ficam no db.js (compartilhado com o catálogo e o admin).
 };
 
 const COLUNAS = [
@@ -155,7 +156,7 @@ const COLUNAS = [
   { status:'Entregue', label:'Entregue', cls:'col-entregue' }
 ];
 
-/* Pedidos de exemplo (usados se CONFIG.API_URL estiver vazio) */
+/* Pedidos de exemplo (usados no modo demonstração, sem Supabase configurado) */
 const PEDIDOS_EXEMPLO = [
   { id:'PED-260712-0001', timestamp:new Date().toISOString(), status:'Novo', cliente_nome:'Maria Souza', cliente_telefone:'11988887777',
     itens:[{nome:'Caneca de Porcelana Personalizada', variacao:'325ml', precoUnit:29.9, qtd:2}], total:59.8, observacoes:'Entregar até sexta' },
@@ -171,15 +172,19 @@ let draggedId = null;
 async function carregarPedidos(){
   const board = document.getElementById('board');
   board.innerHTML = '<div class="loading">Carregando pedidos...</div>';
-  if(!CONFIG.API_URL){
+  if(!dbPronto()){
     pedidos = JSON.parse(JSON.stringify(PEDIDOS_EXEMPLO));
     renderBoard();
     return;
   }
+  // Exige login (as RLS só liberam pedidos para autenticado)
+  const user = await dbUsuarioLogado();
+  if(!user){
+    board.innerHTML = '<div class="loading">Faça login no painel admin primeiro, depois volte aqui.<br><a href="admin.html" style="color:var(--orange)">Ir para o painel</a></div>';
+    return;
+  }
   try{
-    const res = await fetch(`${CONFIG.API_URL}?action=pedidos`);
-    const data = await res.json();
-    pedidos = data.pedidos || [];
+    pedidos = await dbGetPedidos();
   }catch(e){
     console.error('Erro ao carregar pedidos, usando exemplo:', e);
     pedidos = JSON.parse(JSON.stringify(PEDIDOS_EXEMPLO));
@@ -253,13 +258,9 @@ async function onDrop(e){
   if(!pedido || pedido.status===novoStatus) return;
   pedido.status = novoStatus;
   renderBoard();
-  if(CONFIG.API_URL){
+  if(dbPronto() && pedido._rowId){
     try{
-      await fetch(CONFIG.API_URL, {
-        method:'POST',
-        headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify({ action:'atualizarStatus', id:pedido.id, status:novoStatus })
-      });
+      await dbAtualizarStatus(pedido._rowId, novoStatus);
     }catch(err){
       console.error('Erro ao atualizar status:', err);
     }

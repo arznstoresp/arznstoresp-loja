@@ -22,6 +22,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db.js"></script>
 <style>
   :root{
     --bg:#000000;
@@ -799,15 +801,16 @@ function icon(nome, cls){
 }
 
 const CONFIG = {
-  API_URL: '',
   WHATSAPP_NUMERO: '5511988011285',
 
-  // Ative depois de configurar a Google Places API no Code.gs. Puxa avaliações reais do seu perfil.
-  AVALIACOES_GOOGLE: false,
-  // Ative depois de configurar o Mercado Pago no Code.gs. Mostra o botão "Pagar online".
-  PAGAMENTO_ONLINE_ATIVO: false,
-  // Ative depois de configurar o Melhor Envio no Code.gs. Usa frete real por transportadora.
-  FRETE_REAL_ATIVO: false,
+  // As chaves do Supabase ficam no arquivo db.js (é lá que você conecta o banco).
+
+  // Recursos avançados opcionais (via Edge Functions do Supabase — ver LEIA-ME).
+  // Deixe '' (vazio) para manter desativado. O botão de pagar só aparece se PAGAMENTO_URL estiver preenchido.
+  AVALIACOES_GOOGLE_URL: '',   // Edge Function que devolve avaliações do Google
+  FRETE_REAL_URL: '',          // Edge Function que calcula frete (Melhor Envio)
+  PAGAMENTO_URL: '',           // Edge Function que gera link do Mercado Pago
+  get PAGAMENTO_ONLINE_ATIVO(){ return !!this.PAGAMENTO_URL; },
 
   // Frete grátis a partir deste valor (em reais). Deixe 0 para desativar.
   // ATENÇÃO: o frete grátis só vale para CEPs da entrega local (ver ENTREGA_LOCAL abaixo).
@@ -1015,13 +1018,12 @@ renderAvisos();
 document.getElementById('atendimento-link').href = `https://wa.me/${CONFIG.WHATSAPP_NUMERO}`;
 
 async function carregarProdutos(){
-  if(!CONFIG.API_URL){
+  if(!dbPronto()){
     produtos = PRODUTOS_EXEMPLO;
   }else{
     try{
-      const res = await fetch(`${CONFIG.API_URL}?action=produtos`);
-      const data = await res.json();
-      produtos = data.produtos || [];
+      produtos = await dbGetProdutos();
+      if(!produtos.length) produtos = [];
     }catch(e){
       console.error('Erro ao carregar produtos, usando exemplo:', e);
       produtos = PRODUTOS_EXEMPLO;
@@ -1047,15 +1049,10 @@ function abrirDeepLink(){
 // Registra visualização do produto (sem travar a tela). Conta 1x por produto por sessão.
 let vistosNestaSessao = [];
 function registrarVisualizacao(id, nome){
-  if(!CONFIG.API_URL) return;              // só conta quando ligado ao backend
+  if(!dbPronto()) return;                   // só conta quando ligado ao banco
   if(vistosNestaSessao.includes(id)) return;
   vistosNestaSessao.push(id);
-  try{
-    fetch(CONFIG.API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'registrarView', id, nome })
-    }).catch(()=>{});
-  }catch(e){}
+  try{ dbRegistrarView(id, nome); }catch(e){}
 }
 
 function renderDestaques(){
@@ -1220,14 +1217,15 @@ function estrelasHtml(nota){
 }
 
 async function renderReviews(){
-  let r = CONFIG.AVALIACOES; // fallback: manuais
+  let r = CONFIG.AVALIACOES; // fallback: avaliações manuais
 
-  // Tenta buscar avaliações reais do Google (via backend)
-  if(CONFIG.API_URL && CONFIG.AVALIACOES_GOOGLE){
+  // Opcional: avaliações reais do Google via Edge Function do Supabase.
+  // Configure CONFIG.AVALIACOES_GOOGLE_URL com a URL da sua Edge Function (ver LEIA-ME).
+  if(CONFIG.AVALIACOES_GOOGLE_URL){
     try{
-      const res = await fetch(`${CONFIG.API_URL}?action=avaliacoes`);
+      const res = await fetch(CONFIG.AVALIACOES_GOOGLE_URL);
       const data = await res.json();
-      if(data.ok && !data.usarManual && data.lista && data.lista.length){
+      if(data.ok && data.lista && data.lista.length){
         r = { media:data.media, total:data.total, lista:data.lista };
       }
     }catch(e){ /* mantém as manuais */ }
@@ -1588,18 +1586,17 @@ async function calcularFrete(){
     return;
   }
 
-  // 2) Frete real (Melhor Envio), se ativado e publicado
-  if(CONFIG.FRETE_REAL_ATIVO && CONFIG.API_URL){
+  // 2) Frete real (Melhor Envio) via Edge Function opcional do Supabase
+  if(CONFIG.FRETE_REAL_URL){
     msg.className='feedback-msg'; msg.textContent='Calculando frete...';
     try{
       const subtotal = carrinho.reduce((s,i)=>s+itemTotal(i),0);
-      const res = await fetch(CONFIG.API_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain'},
-        body: JSON.stringify({ action:'calcularFreteReal', cep, valor:subtotal })
+      const res = await fetch(CONFIG.FRETE_REAL_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ cep, valor:subtotal })
       });
       const data = await res.json();
       if(data.ok && data.opcoes && data.opcoes.length){
-        // Usa a opção mais barata
         const maisBarata = data.opcoes.sort((a,b)=>a.valor-b.valor)[0];
         freteAplicado = { regiao:maisBarata.nome, valor:maisBarata.valor, prazo:maisBarata.prazo, cep:input.value, local:false };
         msg.className='feedback-msg ok';
@@ -1607,7 +1604,6 @@ async function calcularFrete(){
         renderReceipt();
         return;
       }
-      // se veio usarEstimativa, cai pro passo 3
     }catch(e){ /* cai para estimativa */ }
   }
 
@@ -1630,17 +1626,16 @@ async function finalizarPedido(){
 
   const t = calcularTotais();
   const payload = {
-    action:'criarPedido', cliente_nome:nome, cliente_telefone:telefone, itens:carrinho,
+    cliente_nome:nome, cliente_telefone:telefone, itens:carrinho,
     subtotal:t.subtotal, desconto:t.desconto, cupom:cupomAplicado ? cupomAplicado.codigo : '',
     frete:t.frete, frete_regiao:freteAplicado ? freteAplicado.regiao : '', cep:freteAplicado ? freteAplicado.cep : '',
     total:t.total, observacoes
   };
 
   let pedidoId = 'PED-' + Date.now();
-  if(CONFIG.API_URL){
+  if(dbPronto()){
     try{
-      const res = await fetch(CONFIG.API_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
-      const data = await res.json();
+      const data = await dbCriarPedido(payload);
       if(data.ok) pedidoId = data.id;
     }catch(e){ console.error('Erro ao registrar pedido (seguindo para o WhatsApp mesmo assim):', e); }
   }
@@ -1675,30 +1670,27 @@ async function pagarOnline(){
   const telefone = document.getElementById('cliente-telefone').value.trim();
   if(carrinho.length===0) return;
   if(!nome || !telefone){ showToast('Preencha seu nome e WhatsApp para continuar'); return; }
-  if(!CONFIG.API_URL){ showToast('Pagamento online disponível só com o catálogo publicado.'); return; }
+  if(!dbPronto()){ showToast('Pagamento online disponível só com a loja publicada.'); return; }
+  if(!CONFIG.PAGAMENTO_URL){ showToast('Pagamento online ainda não está configurado.'); return; }
 
   const btn = document.getElementById('btn-pagar');
   btn.disabled = true; btn.textContent = 'Gerando pagamento...';
   const t = calcularTotais();
 
   try{
-    // Registra o pedido primeiro
-    const pedidoRes = await fetch(CONFIG.API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({
-        action:'criarPedido', cliente_nome:nome, cliente_telefone:telefone, itens:carrinho,
-        subtotal:t.subtotal, desconto:t.desconto, cupom:cupomAplicado?cupomAplicado.codigo:'',
-        frete:t.frete, frete_regiao:freteAplicado?freteAplicado.regiao:'', cep:freteAplicado?freteAplicado.cep:'',
-        total:t.total, observacoes:document.getElementById('observacoes').value.trim()
-      })
+    // Registra o pedido primeiro (direto no banco)
+    const pedidoData = await dbCriarPedido({
+      cliente_nome:nome, cliente_telefone:telefone, itens:carrinho,
+      subtotal:t.subtotal, desconto:t.desconto, cupom:cupomAplicado?cupomAplicado.codigo:'',
+      frete:t.frete, frete_regiao:freteAplicado?freteAplicado.regiao:'', cep:freteAplicado?freteAplicado.cep:'',
+      total:t.total, observacoes:document.getElementById('observacoes').value.trim()
     });
-    const pedidoData = await pedidoRes.json();
     const pedidoId = pedidoData.id || '';
 
-    // Gera o link de pagamento
-    const res = await fetch(CONFIG.API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'criarPagamento', itens:carrinho, frete:t.frete, cliente_nome:nome, pedidoId })
+    // Gera o link de pagamento via Edge Function (Mercado Pago)
+    const res = await fetch(CONFIG.PAGAMENTO_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ itens:carrinho, frete:t.frete, cliente_nome:nome, pedidoId })
     });
     const data = await res.json();
     if(data.ok && data.link){
@@ -1706,15 +1698,13 @@ async function pagarOnline(){
       carrinho = []; cupomAplicado = null; freteAplicado = null;
       atualizarCartCount(); closeCart();
       showToast('Pedido registrado! Conclua o pagamento na página aberta');
-    }else if(data.desativado){
-      showToast('Pagamento online ainda não está configurado.');
     }else{
       showToast('Não foi possível gerar o pagamento. Tente pelo WhatsApp.');
     }
   }catch(e){
     showToast('Erro ao gerar pagamento. Tente pelo WhatsApp.');
   }
-  btn.disabled = false; btn.textContent = '<span id="ico-pagar"></span> Pagar online agora';
+  btn.disabled = false; btn.innerHTML = icon('card')+' Pagar online agora';
 }
 function showToast(msg){
   const t = document.getElementById('toast');
