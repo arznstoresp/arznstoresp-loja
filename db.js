@@ -9,8 +9,8 @@
    os dados são as RLS policies do banco (ver supabase-schema.sql).
    ============================================================ */
 
-const SUPABASE_URL = 'https://thpzvkxoqrhqydqzdffv.supabase.co';       // ex: https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = 'sb_publishable_E2YLvIuSANlr0YkaR0uguw_SDwM44eg';  // a chave "anon public"
+const SUPABASE_URL = '';       // ex: https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = '';  // a chave "anon public"
 const STORAGE_BUCKET = 'produtos';
 
 // Cria o cliente (a lib supabase-js é carregada via <script> antes deste arquivo)
@@ -167,4 +167,28 @@ async function dbUploadImagem(file){
   if(error) return { ok:false, error:error.message };
   const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(nome);
   return { ok:true, url:data.publicUrl };
+}
+
+/* ============ UPLOAD GENÉRICO (banners, logo) ============ */
+async function dbUploadArquivo(file, prefixo){
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const nome = `${prefixo||'arquivo'}-${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(nome, file, { cacheControl:'3600', upsert:false });
+  if(error) return { ok:false, error:error.message };
+  const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(nome);
+  return { ok:true, url:data.publicUrl };
+}
+
+/* ============ CONFIGURAÇÕES DA LOJA ============ */
+async function dbGetConfig(){
+  try{
+    const { data, error } = await sb.from('configuracoes').select('dados').eq('id', 1).single();
+    if(error){ console.error(error); return null; }
+    return data ? data.dados : null;
+  }catch(e){ console.error(e); return null; }
+}
+async function dbSalvarConfig(dados){
+  const { error } = await sb.from('configuracoes').update({ dados, atualizado: new Date().toISOString() }).eq('id', 1);
+  if(error) return { ok:false, error:error.message };
+  return { ok:true };
 }

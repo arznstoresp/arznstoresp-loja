@@ -604,7 +604,7 @@
 <header>
   <div class="header-top">
     <div class="brand">
-      <div class="brand-mark">A</div>
+      <div class="brand-mark brand-logo-slot">A</div>
       <div>
         <div class="brand-name">ArznStoreSP</div>
         <div class="brand-sub">Personalizados</div>
@@ -626,9 +626,9 @@
 <div class="carousel" id="carousel"></div>
 
 <div class="hero">
-  <div class="hero-eyebrow">Personalizados sob encomenda</div>
-  <h1>Feito pra você,<br>do <span class="destaque-palavra">seu jeito</span></h1>
-  <p>Canecas, camisetas, chaveiros, adesivos e muito mais — escolha o modelo, personalize e finalize direto pelo WhatsApp.</p>
+  <div class="hero-eyebrow" id="hero-eyebrow">Personalizados sob encomenda</div>
+  <h1 id="hero-titulo">Feito pra você,<br>do <span class="destaque-palavra">seu jeito</span></h1>
+  <p id="hero-sub">Canecas, camisetas, chaveiros, adesivos e muito mais — escolha o modelo, personalize e finalize direto pelo WhatsApp.</p>
 </div>
 
 <div class="destaques" id="destaques"></div>
@@ -1014,8 +1014,6 @@ function renderAvisos(){
   // Duplica o conteúdo para o loop do marquee ser contínuo (o -50% da animação bate na metade)
   track.innerHTML = seq + '<span class="announce-sep">◆</span>' + seq + '<span class="announce-sep">◆</span>';
 }
-renderAvisos();
-document.getElementById('atendimento-link').href = `https://wa.me/${CONFIG.WHATSAPP_NUMERO}`;
 
 async function carregarProdutos(){
   if(!dbPronto()){
@@ -1803,8 +1801,8 @@ function renderFooter(){
 
       <div class="footer-grid">
         <div class="footer-col">
-          <div class="footer-brand-mark">A</div>
-          <div class="footer-desc">Produtos personalizados feitos sob encomenda em São Paulo. Do primeiro contato à entrega, com cuidado em cada detalhe.</div>
+          <div class="footer-brand-mark brand-logo-slot">A</div>
+          <div class="footer-desc">${CONFIG.RODAPE_DESC || 'Produtos personalizados feitos sob encomenda em São Paulo. Do primeiro contato à entrega, com cuidado em cada detalhe.'}</div>
           <div class="footer-social">
             <a href="https://wa.me/${CONFIG.WHATSAPP_NUMERO}" target="_blank" title="WhatsApp">${icon("whatsapp")}</a>
             ${r.instagram ? `<a href="${r.instagram}" target="_blank" title="Instagram">${icon("instagram")}</a>` : ''}
@@ -1867,14 +1865,74 @@ function assinarNewsletter(){
 }
 
 /* ============ INIT ============ */
-renderCarousel();
-renderSelos();
-renderSobre();
-renderFaq();
-renderFooter();
-carregarProdutos();
-atualizarCartCount();
-atualizarFavCount();
+// Mescla configurações salvas no banco por cima dos padrões do CONFIG
+async function carregarConfiguracoes(){
+  if(!dbPronto()) return;
+  try{
+    const salvas = await dbGetConfig();
+    if(salvas && typeof salvas === 'object'){
+      // Mescla cada chave salva por cima do padrão
+      Object.keys(salvas).forEach(k=>{
+        if(salvas[k] !== null && salvas[k] !== undefined && salvas[k] !== '') CONFIG[k] = salvas[k];
+      });
+      aplicarIdentidade();
+      aplicarTextos();
+    }
+  }catch(e){ console.error('Config: usando padrões', e); }
+}
+
+// Aplica textos personalizados (hero) vindos do editor
+function aplicarTextos(){
+  if(CONFIG.HERO_EYEBROW){ const el=document.getElementById('hero-eyebrow'); if(el) el.textContent = CONFIG.HERO_EYEBROW; }
+  if(CONFIG.HERO_TITULO){
+    const el=document.getElementById('hero-titulo');
+    if(el){
+      // Destaca a última palavra em laranja
+      const palavras = CONFIG.HERO_TITULO.trim().split(' ');
+      if(palavras.length>1){
+        const ultima = palavras.pop();
+        el.innerHTML = palavras.join(' ') + ' <span class="destaque-palavra">' + ultima + '</span>';
+      }else{
+        el.textContent = CONFIG.HERO_TITULO;
+      }
+    }
+  }
+  if(CONFIG.HERO_SUB){ const el=document.getElementById('hero-sub'); if(el) el.textContent = CONFIG.HERO_SUB; }
+
+// Aplica logo, nome e cores da marca (se configurados)
+function aplicarIdentidade(){
+  const id = CONFIG.IDENTIDADE || {};
+  // Cores
+  const root = document.documentElement;
+  if(id.corPrimaria) root.style.setProperty('--orange', id.corPrimaria);
+  if(id.corPrimaria) root.style.setProperty('--glow', id.corPrimaria + '73'); // ~45% alpha
+  if(id.corFundo) root.style.setProperty('--bg', id.corFundo);
+  // Nome da loja
+  if(id.nomeLoja){
+    document.querySelectorAll('.brand-name').forEach(el=> el.textContent = id.nomeLoja);
+  }
+  // Logo (imagem no lugar da marca "A")
+  if(id.logoUrl){
+    document.querySelectorAll('.brand-logo-slot').forEach(el=>{
+      el.innerHTML = `<img src="${id.logoUrl}" alt="${id.nomeLoja||'Logo'}" style="height:38px;width:auto;display:block;border-radius:8px;">`;
+    });
+  }
+}
+
+async function boot(){
+  await carregarConfiguracoes();
+  renderAvisos();
+  renderCarousel();
+  renderSelos();
+  renderSobre();
+  renderFaq();
+  renderFooter();
+  await carregarProdutos();
+  atualizarCartCount();
+  atualizarFavCount();
+  document.getElementById('atendimento-link').href = `https://wa.me/${CONFIG.WHATSAPP_NUMERO}`;
+}
+boot();
 
 /* Injeta ícones nos botões estáticos */
 (function initIcones(){

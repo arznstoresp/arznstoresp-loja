@@ -163,6 +163,36 @@
   .status-box{ background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
   .status-num{ font-family:'Syne'; font-weight:800; font-size:20px; }
   .status-nome{ font-size:10px; color:var(--muted); margin-top:2px; }
+
+  /* EDITOR DA LOJA */
+  .editor-modal{ max-width:720px; }
+  .editor-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .editor-tabs{ display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid var(--border); margin-bottom:20px; scrollbar-width:none; }
+  .editor-tabs::-webkit-scrollbar{ display:none; }
+  .editor-tab{
+    background:none; border:none; color:var(--muted); padding:10px 14px; font-family:'DM Sans'; font-weight:600;
+    font-size:14px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:.15s;
+  }
+  .editor-tab:hover{ color:var(--text); }
+  .editor-tab.ativo{ color:var(--orange); border-bottom-color:var(--orange); }
+  .aba-conteudo{ display:none; }
+  .aba-conteudo.ativo{ display:block; }
+  .aba-intro{ font-size:13px; color:var(--muted); margin-bottom:14px; }
+  .secao-titulo{ font-family:'Syne'; font-weight:700; font-size:14px; color:var(--orange); margin:22px 0 4px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+
+  .cor-input{ display:flex; gap:8px; align-items:center; }
+  .cor-input input[type=color]{ width:44px; height:42px; padding:2px; border-radius:8px; background:var(--bg); border:1px solid var(--border); cursor:pointer; flex:0 0 auto; }
+  .cor-input input[type=text]{ flex:1; }
+
+  .upload-mini{ padding:16px; }
+  #logo-preview-area img{ max-height:60px; width:auto; border-radius:8px; }
+
+  .banner-item, .cupom-item, .faq-item-edit{ background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
+  .banner-thumb{ width:100%; height:90px; object-fit:cover; border-radius:8px; margin-bottom:8px; background:var(--card2); }
+  .banner-upload{ border:1px dashed var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; font-size:12px; color:var(--muted); margin-bottom:8px; }
+  .banner-upload:hover{ border-color:var(--orange); color:var(--orange); }
+  .aviso-item{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .aviso-item input{ flex:1; }
 </style>
 </head>
 <body>
@@ -197,6 +227,7 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn btn-ghost" onclick="abrirEditorLoja()"><span class="ico" id="ico-loja"></span> Editor da Loja</button>
       <button class="btn btn-ghost" onclick="abrirMetricas()"><span class="ico" id="ico-metricas"></span> Métricas</button>
       <button class="btn btn-ghost" onclick="sair()">Sair</button>
       <button class="btn btn-primary" onclick="abrirForm()">+ Novo produto</button>
@@ -341,6 +372,128 @@
   </div>
 </div>
 
+<!-- MODAL EDITOR DA LOJA -->
+<div class="overlay" id="editor-overlay" onclick="if(event.target===this) fecharEditorLoja()">
+  <div class="form-modal editor-modal">
+    <div class="editor-header">
+      <div>
+        <h2>Editor da Loja</h2>
+        <div class="sub">Personalize tudo — sem mexer em código.</div>
+      </div>
+      <button class="btn btn-primary" onclick="salvarConfig()" id="btn-salvar-config">Salvar alterações</button>
+    </div>
+
+    <div class="editor-tabs" id="editor-tabs">
+      <button class="editor-tab ativo" data-aba="identidade" onclick="trocarAba('identidade')">Identidade</button>
+      <button class="editor-tab" data-aba="banners" onclick="trocarAba('banners')">Banners</button>
+      <button class="editor-tab" data-aba="avisos" onclick="trocarAba('avisos')">Avisos</button>
+      <button class="editor-tab" data-aba="cupons" onclick="trocarAba('cupons')">Cupons</button>
+      <button class="editor-tab" data-aba="frete" onclick="trocarAba('frete')">Frete</button>
+      <button class="editor-tab" data-aba="textos" onclick="trocarAba('textos')">Textos</button>
+    </div>
+
+    <div class="editor-body">
+      <!-- ABA IDENTIDADE -->
+      <div class="aba-conteudo ativo" data-aba="identidade">
+        <label>Nome da loja</label>
+        <input type="text" id="cfg-nome" placeholder="ArznStoreSP">
+
+        <label>Logo (imagem)</label>
+        <div class="upload-area upload-mini" onclick="document.getElementById('logo-input').click()">
+          <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="uploadLogo(this.files[0])">
+          <div id="logo-preview-area">
+            <div class="upload-placeholder"><span class="ico" id="ico-logo-up"></span><div>Clique para enviar o logo</div></div>
+          </div>
+        </div>
+        <div class="hint">PNG com fundo transparente fica melhor. Aparece no topo do site.</div>
+
+        <div class="row-2">
+          <div>
+            <label>Cor principal (destaque)</label>
+            <div class="cor-input"><input type="color" id="cfg-cor-primaria" value="#FF6A00"><input type="text" id="cfg-cor-primaria-hex" placeholder="#FF6A00" oninput="sincronizarCor('primaria', this.value)"></div>
+          </div>
+          <div>
+            <label>Cor de fundo</label>
+            <div class="cor-input"><input type="color" id="cfg-cor-fundo" value="#000000"><input type="text" id="cfg-cor-fundo-hex" placeholder="#000000" oninput="sincronizarCor('fundo', this.value)"></div>
+          </div>
+        </div>
+        <div class="hint">Dica: mantenha bom contraste entre a cor de fundo e os textos (que são claros).</div>
+
+        <label>WhatsApp (com DDD, só números)</label>
+        <input type="text" id="cfg-whatsapp" placeholder="5511988011285">
+      </div>
+
+      <!-- ABA BANNERS -->
+      <div class="aba-conteudo" data-aba="banners">
+        <p class="aba-intro">Os banners aparecem no carrossel do topo da loja. A imagem ideal é larga (ex: 1200×400).</p>
+        <div id="banners-list"></div>
+        <button class="link-add" onclick="addBanner()">+ Adicionar banner</button>
+      </div>
+
+      <!-- ABA AVISOS -->
+      <div class="aba-conteudo" data-aba="avisos">
+        <p class="aba-intro">Frases que rolam na faixa laranja no topo do site.</p>
+        <div id="avisos-list"></div>
+        <button class="link-add" onclick="addAviso()">+ Adicionar aviso</button>
+      </div>
+
+      <!-- ABA CUPONS -->
+      <div class="aba-conteudo" data-aba="cupons">
+        <p class="aba-intro">Cupons de desconto que o cliente digita no carrinho.</p>
+        <div id="cupons-list"></div>
+        <button class="link-add" onclick="addCupom()">+ Adicionar cupom</button>
+      </div>
+
+      <!-- ABA FRETE -->
+      <div class="aba-conteudo" data-aba="frete">
+        <label>Frete grátis acima de (R$)</label>
+        <input type="number" id="cfg-frete-gratis" placeholder="300" step="0.01">
+        <div class="hint">Vale só para o raio de entrega local. Deixe 0 para desativar.</div>
+
+        <label>Entrega local — valor (R$)</label>
+        <input type="number" id="cfg-local-valor" placeholder="12" step="0.01">
+        <label>Entrega local — prazo</label>
+        <input type="text" id="cfg-local-prazo" placeholder="1 a 2 dias úteis">
+        <label>Entrega local — prefixos de CEP (separados por vírgula)</label>
+        <input type="text" id="cfg-local-prefixos" placeholder="0131, 0140, 0150">
+        <div class="hint">Os começos de CEP do seu raio de ~10km. Ex: "0131" cobre 01310-000 a 01319-999.</div>
+      </div>
+
+      <!-- ABA TEXTOS -->
+      <div class="aba-conteudo" data-aba="textos">
+        <div class="secao-titulo">Destaque principal (topo)</div>
+        <label>Chamada pequena (eyebrow)</label>
+        <input type="text" id="cfg-hero-eyebrow" placeholder="Personalizados sob encomenda">
+        <label>Título grande</label>
+        <input type="text" id="cfg-hero-titulo" placeholder="Feito pra você, do seu jeito">
+        <label>Subtítulo</label>
+        <textarea id="cfg-hero-sub" rows="2" placeholder="Canecas, camisetas..."></textarea>
+
+        <div class="secao-titulo">Rodapé / contato</div>
+        <label>Descrição da loja (rodapé)</label>
+        <textarea id="cfg-rodape-desc" rows="2"></textarea>
+        <div class="row-2">
+          <div><label>E-mail</label><input type="text" id="cfg-email" placeholder="contato@..."></div>
+          <div><label>Horário</label><input type="text" id="cfg-horario" placeholder="Seg a Sex, 9h às 18h"></div>
+        </div>
+        <div class="row-2">
+          <div><label>Instagram (@)</label><input type="text" id="cfg-instagram" placeholder="@arznstoresp"></div>
+          <div><label>Cidade/endereço</label><input type="text" id="cfg-endereco" placeholder="São Paulo, SP"></div>
+        </div>
+
+        <div class="secao-titulo">Perguntas frequentes (FAQ)</div>
+        <div id="faq-list"></div>
+        <button class="link-add" onclick="addFaq()">+ Adicionar pergunta</button>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="fecharEditorLoja()">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarConfig()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -351,7 +504,8 @@ const ICONS = {
   edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>',
   warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
-  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>'
+  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
+  palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-10z"/></svg>'
 };
 function icon(nome){ return `<span class="ico">${ICONS[nome]||''}</span>`; }
 
@@ -740,6 +894,236 @@ async function excluir(id){
 }
 
 /* ============ MÉTRICAS ============ */
+/* ============ EDITOR DA LOJA ============ */
+let configAtual = {};        // config carregada do banco
+let bannersEdit = [];        // [{img, titulo, subtitulo}]
+let avisosEdit = [];         // [string]
+let cuponsEdit = [];         // [{codigo, tipo, valor, minimo}]
+let faqEdit = [];            // [{pergunta, resposta}]
+let logoUrlEdit = '';
+
+async function abrirEditorLoja(){
+  document.getElementById('editor-overlay').classList.add('open');
+  if(!dbPronto()){
+    showToast('O Editor da Loja funciona só com a loja publicada.', true);
+  }
+  // Carrega config existente
+  let cfg = {};
+  if(dbPronto()){
+    try{ cfg = await dbGetConfig() || {}; }catch(e){ cfg = {}; }
+  }
+  configAtual = cfg;
+  preencherEditor(cfg);
+  trocarAba('identidade');
+}
+function fecharEditorLoja(){ document.getElementById('editor-overlay').classList.remove('open'); }
+
+function trocarAba(aba){
+  document.querySelectorAll('.editor-tab').forEach(t=> t.classList.toggle('ativo', t.dataset.aba===aba));
+  document.querySelectorAll('.aba-conteudo').forEach(c=> c.classList.toggle('ativo', c.dataset.aba===aba));
+}
+
+function sincronizarCor(qual, valor){
+  if(qual==='primaria'){ const p=document.getElementById('cfg-cor-primaria'); if(/^#[0-9a-fA-F]{6}$/.test(valor)) p.value=valor; }
+  if(qual==='fundo'){ const p=document.getElementById('cfg-cor-fundo'); if(/^#[0-9a-fA-F]{6}$/.test(valor)) p.value=valor; }
+}
+
+function preencherEditor(cfg){
+  const id = cfg.IDENTIDADE || {};
+  document.getElementById('cfg-nome').value = id.nomeLoja || 'ArznStoreSP';
+  document.getElementById('cfg-cor-primaria').value = id.corPrimaria || '#FF6A00';
+  document.getElementById('cfg-cor-primaria-hex').value = id.corPrimaria || '#FF6A00';
+  document.getElementById('cfg-cor-fundo').value = id.corFundo || '#000000';
+  document.getElementById('cfg-cor-fundo-hex').value = id.corFundo || '#000000';
+  document.getElementById('cfg-whatsapp').value = cfg.WHATSAPP_NUMERO || '5511988011285';
+  logoUrlEdit = id.logoUrl || '';
+  renderLogoPreview();
+
+  // Banners
+  bannersEdit = (cfg.BANNERS || []).map(b=>({ img:b.img||'', titulo:b.titulo||'', subtitulo:b.subtitulo||'' }));
+  if(bannersEdit.length===0) bannersEdit = [{img:'',titulo:'',subtitulo:''}];
+  renderBannersEdit();
+
+  // Avisos
+  avisosEdit = (cfg.AVISOS || []).slice();
+  if(avisosEdit.length===0) avisosEdit = [''];
+  renderAvisosEdit();
+
+  // Cupons
+  cuponsEdit = (cfg.CUPONS || []).map(c=>({ codigo:c.codigo||'', tipo:c.tipo||'percentual', valor:c.valor||0, minimo:c.minimo||0 }));
+  renderCuponsEdit();
+
+  // Frete
+  document.getElementById('cfg-frete-gratis').value = cfg.FRETE_GRATIS_ACIMA!==undefined ? cfg.FRETE_GRATIS_ACIMA : 300;
+  const local = cfg.ENTREGA_LOCAL || {};
+  document.getElementById('cfg-local-valor').value = local.valor!==undefined ? local.valor : 12;
+  document.getElementById('cfg-local-prazo').value = local.prazo || '1 a 2 dias úteis';
+  document.getElementById('cfg-local-prefixos').value = (local.prefixos || []).join(', ');
+
+  // Textos
+  document.getElementById('cfg-hero-eyebrow').value = cfg.HERO_EYEBROW || 'Personalizados sob encomenda';
+  document.getElementById('cfg-hero-titulo').value = cfg.HERO_TITULO || 'Feito pra você, do seu jeito';
+  document.getElementById('cfg-hero-sub').value = cfg.HERO_SUB || '';
+  const r = cfg.RODAPE || {};
+  document.getElementById('cfg-rodape-desc').value = cfg.RODAPE_DESC || '';
+  document.getElementById('cfg-email').value = r.email || '';
+  document.getElementById('cfg-horario').value = r.horario || '';
+  document.getElementById('cfg-instagram').value = r.instagramHandle || '@arznstoresp';
+  document.getElementById('cfg-endereco').value = r.endereco || 'São Paulo, SP';
+
+  faqEdit = (cfg.FAQ || []).map(f=>({ pergunta:f.pergunta||f.p||'', resposta:f.resposta||f.r||'' }));
+  renderFaqEdit();
+}
+
+/* ---- Logo ---- */
+function renderLogoPreview(){
+  const el = document.getElementById('logo-preview-area');
+  if(logoUrlEdit){
+    el.innerHTML = `<img src="${logoUrlEdit}" alt="logo"><div class="hint" style="margin-top:8px">Clique para trocar</div>`;
+  }else{
+    el.innerHTML = `<div class="upload-placeholder"><span class="ico">${icon('upload')}</span><div>Clique para enviar o logo</div></div>`;
+  }
+}
+async function uploadLogo(file){
+  if(!file) return;
+  if(!dbPronto()){ logoUrlEdit = URL.createObjectURL(file); renderLogoPreview(); return; }
+  showToast('Enviando logo...');
+  const data = await dbUploadArquivo(file, 'logo');
+  if(data.ok){ logoUrlEdit = data.url; renderLogoPreview(); showToast('Logo enviado'); }
+  else showToast('Erro no envio do logo', true);
+}
+
+/* ---- Banners ---- */
+function renderBannersEdit(){
+  const el = document.getElementById('banners-list');
+  el.innerHTML = bannersEdit.map((b,i)=>`
+    <div class="banner-item">
+      <div class="repeater-head"><span>Banner ${i+1}</span><button class="link-remove" onclick="removerBanner(${i})">remover</button></div>
+      ${b.img ? `<img class="banner-thumb" src="${b.img}" alt="">` : ''}
+      <div class="banner-upload" onclick="document.getElementById('banner-file-${i}').click()">
+        <input type="file" id="banner-file-${i}" accept="image/*" style="display:none" onchange="uploadBanner(${i}, this.files[0])">
+        ${b.img ? 'Trocar imagem' : 'Clique para enviar a imagem do banner'}
+      </div>
+      <input type="text" placeholder="Título (ex: Canecas com 20% OFF)" value="${(b.titulo||'').replace(/"/g,'&quot;')}" oninput="bannersEdit[${i}].titulo=this.value">
+      <div style="height:8px"></div>
+      <input type="text" placeholder="Subtítulo" value="${(b.subtitulo||'').replace(/"/g,'&quot;')}" oninput="bannersEdit[${i}].subtitulo=this.value">
+    </div>
+  `).join('');
+}
+function addBanner(){ bannersEdit.push({img:'',titulo:'',subtitulo:''}); renderBannersEdit(); }
+function removerBanner(i){ bannersEdit.splice(i,1); renderBannersEdit(); }
+async function uploadBanner(i, file){
+  if(!file) return;
+  if(!dbPronto()){ bannersEdit[i].img = URL.createObjectURL(file); renderBannersEdit(); return; }
+  showToast('Enviando banner...');
+  const data = await dbUploadArquivo(file, 'banner');
+  if(data.ok){ bannersEdit[i].img = data.url; renderBannersEdit(); showToast('Banner enviado'); }
+  else showToast('Erro no envio', true);
+}
+
+/* ---- Avisos ---- */
+function renderAvisosEdit(){
+  const el = document.getElementById('avisos-list');
+  el.innerHTML = avisosEdit.map((a,i)=>`
+    <div class="aviso-item">
+      <input type="text" value="${(a||'').replace(/"/g,'&quot;')}" placeholder="Ex: Frete grátis acima de R$ 300" oninput="avisosEdit[${i}]=this.value">
+      <button class="link-remove" onclick="removerAviso(${i})">remover</button>
+    </div>
+  `).join('');
+}
+function addAviso(){ avisosEdit.push(''); renderAvisosEdit(); }
+function removerAviso(i){ avisosEdit.splice(i,1); renderAvisosEdit(); }
+
+/* ---- Cupons ---- */
+function renderCuponsEdit(){
+  const el = document.getElementById('cupons-list');
+  el.innerHTML = cuponsEdit.map((c,i)=>`
+    <div class="cupom-item">
+      <div class="repeater-head"><span>Cupom ${i+1}</span><button class="link-remove" onclick="removerCupom(${i})">remover</button></div>
+      <div class="row-2">
+        <div><input type="text" placeholder="CÓDIGO" value="${(c.codigo||'').replace(/"/g,'&quot;')}" oninput="cuponsEdit[${i}].codigo=this.value.toUpperCase()"></div>
+        <div>
+          <select onchange="cuponsEdit[${i}].tipo=this.value">
+            <option value="percentual" ${c.tipo==='percentual'?'selected':''}>Percentual (%)</option>
+            <option value="fixo" ${c.tipo==='fixo'?'selected':''}>Valor fixo (R$)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row-2" style="margin-top:8px">
+        <div><input type="number" placeholder="Valor" value="${c.valor||''}" step="0.01" oninput="cuponsEdit[${i}].valor=parseFloat(this.value)||0"></div>
+        <div><input type="number" placeholder="Mínimo (R$)" value="${c.minimo||''}" step="0.01" oninput="cuponsEdit[${i}].minimo=parseFloat(this.value)||0"></div>
+      </div>
+    </div>
+  `).join('');
+}
+function addCupom(){ cuponsEdit.push({codigo:'',tipo:'percentual',valor:0,minimo:0}); renderCuponsEdit(); }
+function removerCupom(i){ cuponsEdit.splice(i,1); renderCuponsEdit(); }
+
+/* ---- FAQ ---- */
+function renderFaqEdit(){
+  const el = document.getElementById('faq-list');
+  el.innerHTML = faqEdit.map((f,i)=>`
+    <div class="faq-item-edit">
+      <div class="repeater-head"><span>Pergunta ${i+1}</span><button class="link-remove" onclick="removerFaq(${i})">remover</button></div>
+      <input type="text" placeholder="Pergunta" value="${(f.pergunta||'').replace(/"/g,'&quot;')}" oninput="faqEdit[${i}].pergunta=this.value">
+      <div style="height:8px"></div>
+      <textarea rows="2" placeholder="Resposta" oninput="faqEdit[${i}].resposta=this.value">${f.resposta||''}</textarea>
+    </div>
+  `).join('');
+}
+function addFaq(){ faqEdit.push({pergunta:'',resposta:''}); renderFaqEdit(); }
+function removerFaq(i){ faqEdit.splice(i,1); renderFaqEdit(); }
+
+/* ---- Salvar tudo ---- */
+async function salvarConfig(){
+  const prefixos = document.getElementById('cfg-local-prefixos').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const cfg = {
+    IDENTIDADE: {
+      nomeLoja: document.getElementById('cfg-nome').value.trim(),
+      logoUrl: logoUrlEdit,
+      corPrimaria: document.getElementById('cfg-cor-primaria').value,
+      corFundo: document.getElementById('cfg-cor-fundo').value
+    },
+    WHATSAPP_NUMERO: document.getElementById('cfg-whatsapp').value.trim(),
+    BANNERS: bannersEdit.filter(b=>b.img || b.titulo),
+    AVISOS: avisosEdit.filter(a=>a && a.trim()),
+    CUPONS: cuponsEdit.filter(c=>c.codigo && c.codigo.trim()),
+    FRETE_GRATIS_ACIMA: parseFloat(document.getElementById('cfg-frete-gratis').value)||0,
+    ENTREGA_LOCAL: {
+      rotulo: 'Entrega local (até 10km)',
+      valor: parseFloat(document.getElementById('cfg-local-valor').value)||0,
+      prazo: document.getElementById('cfg-local-prazo').value.trim(),
+      prefixos: prefixos
+    },
+    HERO_EYEBROW: document.getElementById('cfg-hero-eyebrow').value.trim(),
+    HERO_TITULO: document.getElementById('cfg-hero-titulo').value.trim(),
+    HERO_SUB: document.getElementById('cfg-hero-sub').value.trim(),
+    RODAPE_DESC: document.getElementById('cfg-rodape-desc').value.trim(),
+    RODAPE: {
+      email: document.getElementById('cfg-email').value.trim(),
+      horario: document.getElementById('cfg-horario').value.trim(),
+      instagramHandle: document.getElementById('cfg-instagram').value.trim(),
+      instagram: 'https://instagram.com/' + document.getElementById('cfg-instagram').value.trim().replace('@',''),
+      endereco: document.getElementById('cfg-endereco').value.trim(),
+      cnpj: '55.324.963/0001-32'
+    },
+    FAQ: faqEdit.filter(f=>f.pergunta && f.pergunta.trim())
+  };
+
+  if(!dbPronto()){ showToast('Configurações válidas! (publique a loja para salvar de verdade)'); return; }
+
+  const btns = document.querySelectorAll('#btn-salvar-config, .form-footer .btn-primary');
+  btns.forEach(b=>{ b.disabled=true; });
+  const data = await dbSalvarConfig(cfg);
+  btns.forEach(b=>{ b.disabled=false; });
+  if(data.ok){
+    showToast('Loja atualizada! Recarregue o catálogo para ver.');
+    fecharEditorLoja();
+  }else{
+    showToast('Erro ao salvar: '+data.error, true);
+  }
+}
+
 async function abrirMetricas(){
   document.getElementById('metricas-overlay').classList.add('open');
   const el = document.getElementById('metricas-content');
@@ -805,6 +1189,8 @@ function showToast(msg, erro){
   const m=document.getElementById('ico-metricas'); if(m) m.innerHTML=icon('chart');
   const w=document.getElementById('ico-warn'); if(w) w.innerHTML=icon('warning');
   const u=document.getElementById('ico-upload'); if(u) u.innerHTML=icon('upload');
+  const l=document.getElementById('ico-loja'); if(l) l.innerHTML=icon('palette');
+  const lu=document.getElementById('ico-logo-up'); if(lu) lu.innerHTML=icon('upload');
   // Se já houver sessão ativa do Supabase, entra direto
   if(dbPronto()){
     try{ const user = await dbUsuarioLogado(); if(user) mostrarApp(); }catch(e){}
