@@ -380,7 +380,6 @@
         <h2>Editor da Loja</h2>
         <div class="sub">Personalize tudo — sem mexer em código.</div>
       </div>
-      <button class="btn btn-primary" onclick="salvarConfig()" id="btn-salvar-config">Salvar alterações</button>
     </div>
 
     <div class="editor-tabs" id="editor-tabs">
@@ -480,6 +479,9 @@
           <div><label>Instagram (@)</label><input type="text" id="cfg-instagram" placeholder="@arznstoresp"></div>
           <div><label>Cidade/endereço</label><input type="text" id="cfg-endereco" placeholder="São Paulo, SP"></div>
         </div>
+        <label>Link do Google Maps (localização da loja)</label>
+        <input type="text" id="cfg-mapa-link" placeholder="Cole aqui o link do seu perfil no Google Maps">
+        <div class="hint">No Google Maps, busque sua loja → Compartilhar → Copiar link. Deixa a localização 100% fiel e clicável.</div>
 
         <div class="secao-titulo">Perguntas frequentes (FAQ)</div>
         <div id="faq-list"></div>
@@ -970,6 +972,7 @@ function preencherEditor(cfg){
   document.getElementById('cfg-horario').value = r.horario || '';
   document.getElementById('cfg-instagram').value = r.instagramHandle || '@arznstoresp';
   document.getElementById('cfg-endereco').value = r.endereco || 'São Paulo, SP';
+  document.getElementById('cfg-mapa-link').value = r.mapaLink || '';
 
   faqEdit = (cfg.FAQ || []).map(f=>({ pergunta:f.pergunta||f.p||'', resposta:f.resposta||f.r||'' }));
   renderFaqEdit();
@@ -1105,6 +1108,7 @@ async function salvarConfig(){
       instagramHandle: document.getElementById('cfg-instagram').value.trim(),
       instagram: 'https://instagram.com/' + document.getElementById('cfg-instagram').value.trim().replace('@',''),
       endereco: document.getElementById('cfg-endereco').value.trim(),
+      mapaLink: document.getElementById('cfg-mapa-link').value.trim(),
       cnpj: '55.324.963/0001-32'
     },
     FAQ: faqEdit.filter(f=>f.pergunta && f.pergunta.trim())
@@ -1112,7 +1116,7 @@ async function salvarConfig(){
 
   if(!dbPronto()){ showToast('Configurações válidas! (publique a loja para salvar de verdade)'); return; }
 
-  const btns = document.querySelectorAll('#btn-salvar-config, .form-footer .btn-primary');
+  const btns = document.querySelectorAll('.form-footer .btn-primary');
   btns.forEach(b=>{ b.disabled=true; });
   const data = await dbSalvarConfig(cfg);
   btns.forEach(b=>{ b.disabled=false; });
