@@ -193,6 +193,89 @@
   .banner-upload:hover{ border-color:var(--orange); color:var(--orange); }
   .aviso-item{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
   .aviso-item input{ flex:1; }
+  /* ============ DASHBOARD LAYOUT ============ */
+  .dash{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:250px; flex:0 0 250px; background:#0a0a0a; border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:20px 14px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .sidebar-brand{ display:flex; align-items:center; gap:11px; padding:4px 8px 20px; margin-bottom:8px; border-bottom:1px solid var(--border); }
+  .sidebar-brand .brand-mark{ width:38px; height:38px; }
+  .sidebar-brand .brand-title{ font-family:'Syne'; font-weight:700; font-size:16px; }
+  .sidebar-brand .brand-sub{ font-size:11px; color:var(--muted); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sidebar-nav{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .nav-grupo{ font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); opacity:.6; margin:16px 10px 6px; }
+  .nav-item{
+    display:flex; align-items:center; gap:11px; width:100%; text-align:left; background:none; border:none;
+    color:var(--muted); padding:10px 12px; border-radius:10px; font-family:'DM Sans'; font-weight:600; font-size:14px;
+    cursor:pointer; transition:.15s; text-decoration:none;
+  }
+  .nav-item:hover{ background:var(--card); color:var(--text); }
+  .nav-item.ativo{ background:rgba(255,106,0,.12); color:var(--orange); }
+  .nav-ico{ display:inline-flex; flex:0 0 auto; width:18px; }
+  .nav-ico svg{ width:18px; height:18px; }
+  .nav-bloqueado{ opacity:.5; }
+  .nav-lock{ margin-left:auto; font-size:11px; }
+  .sidebar-rodape{ border-top:1px solid var(--border); padding-top:10px; margin-top:10px; }
+
+  .dash-main{ flex:1; padding:28px 32px 60px; max-width:1200px; }
+  @media(max-width:860px){
+    .sidebar{ position:fixed; left:0; top:0; z-index:50; transform:translateX(-100%); transition:.25s; }
+    .sidebar.aberta{ transform:translateX(0); }
+    .dash-main{ padding:16px; }
+  }
+  .menu-mobile{ display:none; background:var(--card); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:10px; font-weight:700; cursor:pointer; margin-bottom:16px; }
+  @media(max-width:860px){ .menu-mobile{ display:block; } }
+
+  .view{ display:none; }
+  .view.ativa{ display:block; animation:fadeIn .3s; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  .view-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+  .view-head h1{ font-size:26px; }
+  .view-sub{ color:var(--muted); font-size:14px; margin-top:4px; }
+
+  /* Primeiros passos */
+  .card-passos{ background:linear-gradient(135deg, rgba(255,106,0,.08), var(--card)); border:1px solid var(--border); border-radius:16px; padding:22px; margin-bottom:22px; }
+  .passos-head{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+  .passos-titulo{ font-family:'Syne'; font-weight:700; font-size:17px; }
+  .passos-sub{ font-size:13px; color:var(--muted); margin-top:2px; }
+  .passos-barra{ flex:1; min-width:160px; max-width:260px; height:8px; background:var(--bg); border-radius:99px; overflow:hidden; }
+  .passos-fill{ height:100%; width:0; background:linear-gradient(90deg,var(--orange),#ff9a4d); border-radius:99px; transition:.5s; }
+  .passos-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media(max-width:640px){ .passos-grid{ grid-template-columns:1fr; } }
+  .passo{ display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--bg); border:1px solid var(--border); border-radius:11px; cursor:pointer; transition:.15s; }
+  .passo:hover{ border-color:var(--orange); }
+  .passo-check{ width:22px; height:22px; border-radius:50%; border:2px solid var(--border); flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .passo.feito .passo-check{ background:#3ddc84; border-color:#3ddc84; color:#000; }
+  .passo.feito .passo-titulo{ text-decoration:line-through; opacity:.6; }
+  .passo-titulo{ font-weight:600; font-size:13.5px; }
+  .passo-desc{ font-size:11.5px; color:var(--muted); margin-top:1px; }
+
+  /* Stat cards */
+  .stat-cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  @media(max-width:860px){ .stat-cards{ grid-template-columns:1fr 1fr; } }
+  .stat-card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; }
+  .stat-ico{ width:36px; height:36px; border-radius:10px; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--orange); margin-bottom:12px; }
+  .stat-ico svg{ width:19px; height:19px; }
+  .stat-valor{ font-family:'Syne'; font-weight:800; font-size:24px; }
+  .stat-label{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+
+  /* Funil + pedidos */
+  .dash-2col{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:860px){ .dash-2col{ grid-template-columns:1fr; } }
+  .card-dash{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; }
+  .card-dash-titulo{ font-family:'Syne'; font-weight:700; font-size:15px; margin-bottom:16px; }
+  .funil{ display:flex; flex-direction:column; gap:6px; align-items:center; }
+  .funil-etapa{ width:100%; text-align:center; padding:12px; border-radius:8px; color:#fff; font-weight:600; font-size:13px; }
+  .funil-num{ font-family:'Syne'; font-weight:800; font-size:18px; display:block; }
+
+  .ped-recente{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px dashed var(--border); }
+  .ped-recente:last-child{ border-bottom:none; }
+  .ped-rec-nome{ font-weight:600; font-size:13.5px; }
+  .ped-rec-sub{ font-size:11.5px; color:var(--muted); }
+  .ped-rec-valor{ font-family:'Syne'; font-weight:700; color:var(--orange); font-size:14px; }
+  .ped-rec-status{ font-size:10px; padding:2px 8px; border-radius:6px; background:var(--bg); color:var(--muted); }
+
 </style>
 </head>
 <body>
@@ -218,28 +301,101 @@
 
 <!-- APP -->
 <div id="app-screen" style="display:none;">
-  <header>
-    <div class="brand">
-      <div class="brand-mark">A</div>
-      <div>
-        <div class="brand-title">Admin de Produtos</div>
-        <div class="brand-sub">ArznStoreSP Personalizados</div>
+  <div class="dash">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-title">ArznStoreSP</div>
+          <div class="brand-sub" id="sidebar-email">Painel</div>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-ghost" onclick="abrirEditorLoja()"><span class="ico" id="ico-loja"></span> Editor da Loja</button>
-      <button class="btn btn-ghost" onclick="abrirMetricas()"><span class="ico" id="ico-metricas"></span> Métricas</button>
-      <button class="btn btn-ghost" onclick="sair()">Sair</button>
-      <button class="btn btn-primary" onclick="abrirForm()">+ Novo produto</button>
-    </div>
-  </header>
 
-  <div class="container">
-    <div class="toolbar">
-      <h1>Produtos</h1>
-      <input class="search-admin" type="text" id="busca-admin" placeholder="Buscar produto..." oninput="renderLista()">
-    </div>
-    <div id="prod-list" class="prod-list"><div class="loading">Carregando...</div></div>
+      <nav class="sidebar-nav">
+        <div class="nav-grupo">Operação</div>
+        <button class="nav-item ativo" data-view="dashboard" onclick="irView('dashboard')"><span class="nav-ico" id="ni-dash"></span> Dashboard</button>
+        <button class="nav-item" data-view="pedidos" onclick="irView('pedidos')"><span class="nav-ico" id="ni-ped"></span> Pedidos</button>
+        <a class="nav-item" id="nav-kanban" href="kanban.html"><span class="nav-ico" id="ni-kan"></span> Kanban</a>
+
+        <div class="nav-grupo">Catálogo</div>
+        <button class="nav-item" data-view="produtos" onclick="irView('produtos')"><span class="nav-ico" id="ni-prod"></span> Produtos</button>
+        <button class="nav-item" onclick="abrirEditorLoja()"><span class="nav-ico" id="ni-loja"></span> Editor da Loja</button>
+
+        <div class="nav-grupo">Marketing</div>
+        <button class="nav-item" onclick="abrirMetricas()"><span class="nav-ico" id="ni-met"></span> Métricas</button>
+        <button class="nav-item nav-bloqueado" onclick="showToast('Módulo em breve!')"><span class="nav-ico" id="ni-int"></span> Integrações <span class="nav-lock">🔒</span></button>
+        <button class="nav-item nav-bloqueado" onclick="showToast('Módulo em breve!')"><span class="nav-ico" id="ni-cli"></span> Clientes <span class="nav-lock">🔒</span></button>
+        <button class="nav-item nav-bloqueado" onclick="showToast('Módulo em breve!')"><span class="nav-ico" id="ni-fin"></span> Financeiro <span class="nav-lock">🔒</span></button>
+      </nav>
+
+      <div class="sidebar-rodape">
+        <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-ico" id="ni-ver"></span> Ver minha loja</a>
+        <button class="nav-item" onclick="sair()"><span class="nav-ico" id="ni-sair"></span> Sair</button>
+      </div>
+    </aside>
+
+    <!-- CONTEÚDO -->
+    <main class="dash-main">
+      <button class="menu-mobile" onclick="document.getElementById('sidebar').classList.toggle('aberta')">☰ Menu</button>
+
+      <!-- VIEW: DASHBOARD -->
+      <section class="view ativa" data-view="dashboard">
+        <div class="view-head">
+          <div>
+            <h1>Olá! 👋</h1>
+            <p class="view-sub" id="dash-boasvindas">Bem-vindo(a) de volta ao seu painel.</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirForm()">+ Novo produto</button>
+        </div>
+
+        <!-- Primeiros passos -->
+        <div class="card-passos" id="card-passos">
+          <div class="passos-head">
+            <div>
+              <div class="passos-titulo">🚀 Primeiros passos</div>
+              <div class="passos-sub" id="passos-contador">0 de 5 concluídos</div>
+            </div>
+            <div class="passos-barra"><div class="passos-fill" id="passos-fill"></div></div>
+          </div>
+          <div class="passos-grid" id="passos-grid"></div>
+        </div>
+
+        <!-- Cartões de estatística -->
+        <div class="stat-cards" id="stat-cards"></div>
+
+        <!-- Funil + pedidos recentes -->
+        <div class="dash-2col">
+          <div class="card-dash">
+            <div class="card-dash-titulo">Funil do catálogo</div>
+            <div class="funil" id="funil"></div>
+          </div>
+          <div class="card-dash">
+            <div class="card-dash-titulo">Pedidos recentes</div>
+            <div id="pedidos-recentes"><div class="loading">Carregando...</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: PRODUTOS -->
+      <section class="view" data-view="produtos">
+        <div class="view-head">
+          <div><h1>Produtos</h1><p class="view-sub">Cadastre, edite e organize seu catálogo.</p></div>
+          <button class="btn btn-primary" onclick="abrirForm()">+ Novo produto</button>
+        </div>
+        <input class="search-admin" type="text" id="busca-admin" placeholder="Buscar produto..." oninput="renderLista()">
+        <div id="prod-list" class="prod-list"><div class="loading">Carregando...</div></div>
+      </section>
+
+      <!-- VIEW: PEDIDOS -->
+      <section class="view" data-view="pedidos">
+        <div class="view-head">
+          <div><h1>Pedidos</h1><p class="view-sub">Todos os pedidos recebidos pela loja.</p></div>
+          <a class="btn btn-ghost" href="kanban.html">Abrir Kanban →</a>
+        </div>
+        <div id="pedidos-lista"><div class="loading">Carregando...</div></div>
+      </section>
+    </main>
   </div>
 </div>
 
@@ -515,7 +671,19 @@ const ICONS = {
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>',
   warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
   upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
-  palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-10z"/></svg>'
+  palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-10z"/></svg>',
+  dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+  cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>',
+  kanban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="14"/><rect x="15" y="3" width="6" height="9"/><path d="M9 3v0M15 3v0"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.9 9.9 0 0 1-4-.8L3 21l1.9-5a8.4 8.4 0 0 1-.8-3.5A8.4 8.4 0 0 1 12.5 4 8.4 8.4 0 0 1 21 11.5z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>',
+  dollar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M4 9v11h16V9M4 9h16"/><path d="M9 20v-6h6v6"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>'
 };
 function icon(nome){ return `<span class="ico">${ICONS[nome]||''}</span>`; }
 
@@ -572,7 +740,130 @@ function mostrarApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
   if(!dbPronto()) document.getElementById('demo-banner').style.display='block';
+  // Mostra o e-mail logado na sidebar
+  (async()=>{ if(dbPronto()){ try{ const u=await dbUsuarioLogado(); if(u&&u.email) document.getElementById('sidebar-email').textContent=u.email; }catch(e){} } })();
   carregarProdutos();
+  carregarDashboard();
+}
+
+/* ============ NAVEGAÇÃO ENTRE VIEWS ============ */
+function irView(view){
+  document.querySelectorAll('.view').forEach(v=> v.classList.toggle('ativa', v.dataset.view===view));
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=> n.classList.toggle('ativo', n.dataset.view===view));
+  document.getElementById('sidebar').classList.remove('aberta');
+  if(view==='pedidos') carregarPedidosView();
+  window.scrollTo(0,0);
+}
+
+/* ============ DASHBOARD ============ */
+async function carregarDashboard(){
+  if(dbPronto()){ try{ configAtual = await dbGetConfig() || {}; }catch(e){ configAtual = {}; } }
+  renderPassos();
+  let metricas = null, pedidos = [];
+  if(dbPronto()){
+    try{ metricas = await dbGetMetricas(); }catch(e){}
+    try{ pedidos = await dbGetPedidos(); }catch(e){}
+  }
+  renderStatCards(metricas, pedidos);
+  renderFunil(metricas, pedidos);
+  renderPedidosRecentes(pedidos);
+  renderPassos();
+}
+
+const PASSOS = [
+  { id:'produto', titulo:'Cadastre seu primeiro produto', desc:'Com foto, variações e preço', check:()=> produtos.filter(p=>!String(p.id).startsWith('demo')).length>0, acao:()=>{ irView('produtos'); abrirForm(); } },
+  { id:'logo', titulo:'Adicione a logo da sua loja', desc:'Deixe com a cara da sua marca', check:()=> !!(configAtual.IDENTIDADE && configAtual.IDENTIDADE.logoUrl), acao:()=> abrirEditorLoja() },
+  { id:'banner', titulo:'Suba um banner', desc:'Destaque promoções no topo', check:()=> !!(configAtual.BANNERS && configAtual.BANNERS.length), acao:()=> abrirEditorLoja() },
+  { id:'contato', titulo:'Confira seus contatos', desc:'WhatsApp, endereço e redes', check:()=> !!(configAtual.RODAPE && configAtual.RODAPE.email), acao:()=> abrirEditorLoja() },
+  { id:'loja', titulo:'Visite sua loja publicada', desc:'Veja como o cliente vê', check:()=> passoLojaVisitada, acao:()=>{ passoLojaVisitada=true; window.open('catalogo.html','_blank'); renderPassos(); } }
+];
+let passoLojaVisitada = false;
+
+function renderPassos(){
+  const grid = document.getElementById('passos-grid');
+  if(!grid) return;
+  let feitos = 0;
+  grid.innerHTML = PASSOS.map(p=>{
+    let ok = false; try{ ok = p.check(); }catch(e){}
+    if(ok) feitos++;
+    return `
+      <div class="passo ${ok?'feito':''}" onclick="(${p.acao.toString()})()">
+        <div class="passo-check">${ok?'✓':''}</div>
+        <div><div class="passo-titulo">${p.titulo}</div><div class="passo-desc">${p.desc}</div></div>
+      </div>`;
+  }).join('');
+  const pct = Math.round((feitos/PASSOS.length)*100);
+  document.getElementById('passos-fill').style.width = pct+'%';
+  document.getElementById('passos-contador').textContent = `${feitos} de ${PASSOS.length} concluídos`;
+  document.getElementById('card-passos').style.display = feitos===PASSOS.length ? 'none' : 'block';
+}
+
+function renderStatCards(m, pedidos){
+  const hoje = new Date().toDateString();
+  const pedidosHoje = pedidos.filter(p=> p.timestamp && new Date(p.timestamp).toDateString()===hoje);
+  const vendidoHoje = pedidosHoje.reduce((s,p)=> s+(Number(p.total)||0), 0);
+  const aguardando = pedidos.filter(p=> p.status==='Novo').length;
+  const views = m ? (m.totalViews||0) : 0;
+  const cards = [
+    { ico:'card', valor:fmt(vendidoHoje), label:`Vendido hoje · ${pedidosHoje.length} pedido(s)` },
+    { ico:'box', valor:pedidos.length, label:'Pedidos no total' },
+    { ico:'clock', valor:aguardando, label:'Aguardando produção' },
+    { ico:'chart', valor:views, label:'Visualizações de produtos' }
+  ];
+  document.getElementById('stat-cards').innerHTML = cards.map(c=>`
+    <div class="stat-card">
+      <div class="stat-ico">${icon(c.ico)}</div>
+      <div class="stat-valor">${c.valor}</div>
+      <div class="stat-label">${c.label}</div>
+    </div>`).join('');
+}
+
+function renderFunil(m, pedidos){
+  const views = m ? (m.totalViews||0) : 0;
+  const totalPed = pedidos.length;
+  const pagos = pedidos.filter(p=> p.status==='Entregue' || p.status==='Pronto').length;
+  const etapas = [
+    { nome:'Visualizações', num:views, cor:'#3b82f6' },
+    { nome:'Pedidos recebidos', num:totalPed, cor:'#f59e0b' },
+    { nome:'Em produção/prontos', num:pagos, cor:'#a855f7' }
+  ];
+  const max = Math.max(views, totalPed, 1);
+  document.getElementById('funil').innerHTML = etapas.map(e=>{
+    const larg = Math.max(35, Math.round((e.num/max)*100));
+    return `<div class="funil-etapa" style="width:${larg}%; background:${e.cor}"><span class="funil-num">${e.num}</span>${e.nome}</div>`;
+  }).join('');
+}
+
+function renderPedidosRecentes(pedidos){
+  const el = document.getElementById('pedidos-recentes');
+  if(!pedidos.length){ el.innerHTML = '<div class="vazio" style="padding:24px">Nenhum pedido ainda.<br>Eles aparecem aqui quando os clientes finalizam a compra.</div>'; return; }
+  el.innerHTML = pedidos.slice(0,5).map(p=>`
+    <div class="ped-recente">
+      <div>
+        <div class="ped-rec-nome">${p.cliente_nome||'Cliente'}</div>
+        <div class="ped-rec-sub">${p.id} · ${(p.itens||[]).length} item(ns)</div>
+      </div>
+      <div style="text-align:right">
+        <div class="ped-rec-valor">${fmt(p.total||0)}</div>
+        <span class="ped-rec-status">${p.status||'Novo'}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function carregarPedidosView(){
+  const el = document.getElementById('pedidos-lista');
+  el.innerHTML = '<div class="loading">Carregando...</div>';
+  let pedidos = [];
+  if(dbPronto()){ try{ pedidos = await dbGetPedidos(); }catch(e){} }
+  if(!pedidos.length){ el.innerHTML='<div class="vazio" style="padding:40px">Nenhum pedido recebido ainda.</div>'; return; }
+  el.innerHTML = pedidos.map(p=>`
+    <div class="prod-item">
+      <div class="prod-meta">
+        <div class="prod-nome">${p.cliente_nome||'Cliente'} <span class="prod-inativo">${p.status||'Novo'}</span></div>
+        <div class="prod-cat">${p.id} · ${p.cliente_telefone||''} · ${(p.itens||[]).length} item(ns)</div>
+      </div>
+      <div class="prod-preco">${fmt(p.total||0)}</div>
+    </div>`).join('');
 }
 
 /* ============ CARREGAR ============ */
@@ -582,6 +873,7 @@ async function carregarProdutos(){
   if(!dbPronto()){
     produtos = JSON.parse(JSON.stringify(PRODUTOS_EXEMPLO));
     renderLista();
+    renderPassos();
     return;
   }
   try{
@@ -592,6 +884,7 @@ async function carregarProdutos(){
     showToast('Erro ao carregar. Mostrando exemplos.', true);
   }
   renderLista();
+  renderPassos();
 }
 
 function fmt(v){ return 'R$ ' + Number(v).toFixed(2).replace('.',','); }
@@ -1239,11 +1532,23 @@ function showToast(msg, erro){
 
 /* ============ INIT ============ */
 (async function(){
-  const m=document.getElementById('ico-metricas'); if(m) m.innerHTML=icon('chart');
-  const w=document.getElementById('ico-warn'); if(w) w.innerHTML=icon('warning');
-  const u=document.getElementById('ico-upload'); if(u) u.innerHTML=icon('upload');
-  const l=document.getElementById('ico-loja'); if(l) l.innerHTML=icon('palette');
-  const lu=document.getElementById('ico-logo-up'); if(lu) lu.innerHTML=icon('upload');
+  // Ícones que ainda existem (upload no form, warning no banner demo, logo)
+  const setIco = (id, nome)=>{ const el=document.getElementById(id); if(el) el.innerHTML=icon(nome); };
+  setIco('ico-warn','warning');
+  setIco('ico-upload','upload');
+  setIco('ico-logo-up','upload');
+  // Ícones da barra lateral
+  setIco('ni-dash','dash');
+  setIco('ni-ped','cart');
+  setIco('ni-kan','kanban');
+  setIco('ni-prod','box');
+  setIco('ni-loja','palette');
+  setIco('ni-met','chart');
+  setIco('ni-int','link');
+  setIco('ni-cli','users');
+  setIco('ni-fin','dollar');
+  setIco('ni-ver','store');
+  setIco('ni-sair','logout');
   // Se já houver sessão ativa do Supabase, entra direto
   if(dbPronto()){
     try{ const user = await dbUsuarioLogado(); if(user) mostrarApp(); }catch(e){}
