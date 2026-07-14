@@ -162,9 +162,9 @@
     letter-spacing:2px; text-transform:uppercase; color:var(--orange); margin-bottom:14px;
   }
   .hero-eyebrow::before{ content:''; width:24px; height:1px; background:var(--orange); }
-  .hero h1{ font-size:clamp(28px,5vw,44px); font-weight:800; letter-spacing:-1px; line-height:1.05; }
+  .hero h1{ font-size:clamp(34px,6vw,56px); font-weight:800; letter-spacing:-1.5px; line-height:1.05; }
   .hero h1 .destaque-palavra{ color:var(--orange); }
-  .hero p{ color:var(--muted); margin:14px auto 0; font-size:16px; max-width:520px; line-height:1.5; }
+  .hero p{ color:var(--muted); margin:18px auto 0; font-size:clamp(16px,2vw,19px); max-width:600px; line-height:1.55; }
 
   .browse{
     max-width:1200px; margin:0 auto; padding:20px 20px 10px;
@@ -479,28 +479,28 @@
   @media(max-width:640px){ .destaques{ justify-content:flex-start; } }
   .destaques::-webkit-scrollbar{ display:none; }
   .destaque{
-    flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:10px;
-    cursor:pointer; width:96px;
+    flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:12px;
+    cursor:pointer; width:120px;
   }
   .destaque-anel{
-    width:92px; height:92px; border-radius:50%; padding:3px;
+    width:116px; height:116px; border-radius:50%; padding:3px;
     background:linear-gradient(135deg, var(--orange), #ff9a4d, var(--orange));
     display:flex; align-items:center; justify-content:center; transition:.2s;
   }
-  .destaque.ativo .destaque-anel{ box-shadow:0 0 18px var(--glow); }
+  .destaque.ativo .destaque-anel{ box-shadow:0 0 22px var(--glow); }
   .destaque:hover .destaque-anel{ transform:scale(1.06); }
   .destaque-inner{
     width:100%; height:100%; border-radius:50%; overflow:hidden; background:var(--card);
-    border:2px solid var(--bg); display:flex; align-items:center; justify-content:center;
+    border:3px solid var(--bg); display:flex; align-items:center; justify-content:center;
   }
   .destaque-inner img{ width:100%; height:100%; object-fit:cover; }
   .destaque-todos{
     background:var(--card); display:flex; align-items:center; justify-content:center;
-    font-size:30px; color:var(--orange);
+    font-size:38px; color:var(--orange);
   }
   .destaque-nome{
-    font-size:12.5px; font-weight:600; color:var(--muted); text-align:center;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:96px;
+    font-size:14px; font-weight:600; color:var(--muted); text-align:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;
   }
   .destaque.ativo .destaque-nome{ color:var(--orange); }
 
@@ -537,9 +537,13 @@
   .footer-selo .fs-icon{ color:var(--orange); display:flex; }
   .footer-selo .fs-icon svg{ width:20px; height:20px; }
 
-  .footer-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1.3fr; gap:30px; margin-bottom:30px; }
+  .footer-grid{ display:grid; grid-template-columns:1.2fr 1fr 1.2fr; gap:40px; margin-bottom:30px; }
   @media(max-width:820px){ .footer-grid{ grid-template-columns:1fr 1fr; gap:26px; } }
   @media(max-width:480px){ .footer-grid{ grid-template-columns:1fr; } }
+  .contato-tag{ color:var(--muted); opacity:.7; font-size:12px; }
+  .footer-horario{ margin-top:10px; font-size:13px; }
+  .footer-desc-linha{ display:flex; align-items:center; gap:16px; padding:24px 0; border-top:1px solid var(--border); }
+  .footer-desc-linha .footer-brand-mark{ margin-bottom:0; flex:0 0 auto; }
 
   .footer-brand-mark{
     width:40px; height:40px; border-radius:11px; background:#000; border:1px solid var(--orange);
@@ -892,11 +896,13 @@ const CONFIG = {
   ],
   AVALIACOES: {
     media: 5.0,
-    total: 128,
+    total: 214,
     lista: [
       { nome:'Carla Barcellos', tempo:'1 mês atrás', texto:'Experiência ótima, qualidade excelente e entrega rápida. Recomendo demais!' },
       { nome:'João Lima', tempo:'2 meses atrás', texto:'Atendimento excelente, super rápidos no preparo do pedido.' },
-      { nome:'Juliana Vieira', tempo:'3 meses atrás', texto:'Trabalho rápido e de ótima qualidade, fiz um pedido grande e ficou perfeito.' }
+      { nome:'Juliana Vieira', tempo:'3 meses atrás', texto:'Trabalho rápido e de ótima qualidade, fiz um pedido grande e ficou perfeito.' },
+      { nome:'Rafael Souza', tempo:'3 meses atrás', texto:'Caneca personalizada ficou linda, exatamente como pedi. Voltarei a comprar!' },
+      { nome:'Mariana Alves', tempo:'4 meses atrás', texto:'Atendimento atencioso do início ao fim e o acabamento é impecável. Super indico.' }
     ]
   },
 
@@ -1083,8 +1089,9 @@ function registrarVisualizacao(id, nome){
 function renderDestaques(){
   const el = document.getElementById('destaques');
   if(!el) return;
-  // Categorias que têm produtos, na ordem do MENU
-  const cats = CONFIG.MENU.filter(m => produtos.some(p=>p.categoria===m.categoria)).map(m=>m.categoria);
+  // Categorias reais que têm produtos, na ordem em que aparecem
+  const cats = [];
+  produtos.forEach(p=>{ if(p.categoria && !cats.includes(p.categoria)) cats.push(p.categoria); });
   if(cats.length===0){ el.style.display='none'; return; }
   el.style.display='flex';
 
@@ -1095,11 +1102,13 @@ function renderDestaques(){
     </div>`;
 
   const itens = cats.map(cat => {
+    // Imagem personalizada do destaque (definida no Editor da Loja) tem prioridade
+    const custom = (CONFIG.DESTAQUES_IMG || {})[cat];
     const primeiro = produtos.find(p=>p.categoria===cat);
-    const img = primeiro ? imagemPrincipal(primeiro) : 'imagens/caneca-porcelana.svg';
+    const img = custom || (primeiro ? imagemPrincipal(primeiro) : 'imagens/caneca-porcelana.svg');
     return `
     <div class="destaque ${categoriaAtiva===cat?'ativo':''}" onclick="filtrarCategoria('${cat}')">
-      <div class="destaque-anel"><div class="destaque-inner"><img src="${img}" alt="${cat}"></div></div>
+      <div class="destaque-anel"><div class="destaque-inner"><img src="${img}" alt="${cat}" onerror="this.style.display='none'"></div></div>
       <div class="destaque-nome">${cat}</div>
     </div>`;
   }).join('');
@@ -1805,24 +1814,29 @@ let carouselInterval;
 function renderCarousel(){
   const el = document.getElementById('carousel');
   if(!CONFIG.BANNERS || CONFIG.BANNERS.length===0){ el.style.display='none'; return; }
+  el.style.display='';
   el.innerHTML = `
     <div class="carousel-track">
-      ${CONFIG.BANNERS.map((b,i)=>`
+      ${CONFIG.BANNERS.map((b,i)=>{
+        const src = b.img || b.imagem || '';
+        return `
         <div class="carousel-slide ${i===0?'active':''}" data-idx="${i}" onclick="clicarBanner(${i})">
-          <img src="${b.imagem}" alt="${b.titulo}">
+          ${src ? `<img src="${src}" alt="${b.titulo||''}" onerror="this.style.display='none'">` : ''}
           <div class="carousel-caption">
-            <h3>${b.titulo}</h3>
-            <p>${b.subtitulo}</p>
+            <h3>${b.titulo||''}</h3>
+            <p>${b.subtitulo||''}</p>
           </div>
-        </div>
-      `).join('')}
+        </div>`;
+      }).join('')}
     </div>
     <div class="carousel-dots">
-      ${CONFIG.BANNERS.map((_,i)=>`<button class="carousel-dot ${i===0?'active':''}" onclick="irParaSlide(${i})"></button>`).join('')}
+      ${CONFIG.BANNERS.length>1 ? CONFIG.BANNERS.map((_,i)=>`<button class="carousel-dot ${i===0?'active':''}" onclick="irParaSlide(${i})"></button>`).join('') : ''}
     </div>
   `;
   clearInterval(carouselInterval);
-  carouselInterval = setInterval(()=>irParaSlide((carouselIdx+1) % CONFIG.BANNERS.length), 4500);
+  if(CONFIG.BANNERS.length>1){
+    carouselInterval = setInterval(()=>irParaSlide((carouselIdx+1) % CONFIG.BANNERS.length), 4500);
+  }
 }
 function irParaSlide(i){
   carouselIdx = i;
@@ -1886,41 +1900,31 @@ function renderFooter(){
     <div class="footer-inner">
       <div class="footer-grid">
         <div class="footer-col">
-          <div class="footer-brand-mark brand-logo-slot">A</div>
-          <div class="footer-desc">${CONFIG.RODAPE_DESC || 'Produtos personalizados feitos sob encomenda em São Paulo. Do primeiro contato à entrega, com cuidado em cada detalhe.'}</div>
-          <div class="footer-social">
-            <a href="https://wa.me/${CONFIG.WHATSAPP_NUMERO}" target="_blank" title="WhatsApp">${icon("whatsapp")}</a>
-            ${r.instagram ? `<a href="${r.instagram}" target="_blank" title="Instagram">${icon("instagram")}</a>` : ''}
-          </div>
-          ${r.cnpj ? `<div class="footer-cnpj">CNPJ: ${r.cnpj}</div>` : ''}
-        </div>
-
-        <div class="footer-col">
-          <h4>Atendimento</h4>
-          <a href="https://wa.me/${CONFIG.WHATSAPP_NUMERO}" target="_blank" class="footer-contato">
-            <span class="footer-contato-ico">${ICON_WHATSAPP}</span> WhatsApp
+          <h4>Entre em contato</h4>
+          <a href="${linkMapa}" target="_blank" class="footer-contato">
+            <span class="footer-contato-ico">${icon('pin')}</span> ${r.endereco || 'São Paulo, SP'}
           </a>
-          ${r.instagram ? `<a href="${r.instagram}" target="_blank" class="footer-contato">
-            <span class="footer-contato-ico">${ICON_INSTAGRAM}</span> ${r.instagramHandle || 'Instagram'}
-          </a>` : ''}
+          <a href="https://wa.me/${CONFIG.WHATSAPP_NUMERO}" target="_blank" class="footer-contato">
+            <span class="footer-contato-ico">${ICON_WHATSAPP}</span> ${formatarWhats(CONFIG.WHATSAPP_NUMERO)} <span class="contato-tag">(WhatsApp)</span>
+          </a>
           ${r.email ? `<a href="mailto:${r.email}" class="footer-contato">
             <span class="footer-contato-ico">${icon('mail')}</span> ${r.email}
           </a>` : ''}
-          <a href="${linkMapa}" target="_blank" class="footer-contato">
-            <span class="footer-contato-ico">${icon('pin')}</span> ${r.endereco || 'Ver no mapa'}
-          </a>
-          <p style="margin-top:6px">${r.horario || ''}</p>
+          ${r.instagram ? `<a href="${r.instagram}" target="_blank" class="footer-contato">
+            <span class="footer-contato-ico">${ICON_INSTAGRAM}</span> ${r.instagramHandle || 'Instagram'}
+          </a>` : ''}
+          <p class="footer-horario">${r.horario || ''}</p>
         </div>
 
         <div class="footer-col">
-          <h4>Loja</h4>
+          <h4>Formas de pagamento</h4>
+          <div class="pagamentos-list">
+            ${(CONFIG.PAGAMENTOS||[]).map(p=>`<span class="pagamento-chip">${p}</span>`).join('')}
+          </div>
+          <h4 style="margin-top:24px">A loja</h4>
           <a href="#" onclick="filtrarCategoria('Todos');return false;">Todos os produtos</a>
           <a href="#faq" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'});return false;">Perguntas frequentes</a>
           <a href="#sobre" onclick="document.getElementById('sobre').scrollIntoView({behavior:'smooth'});return false;">Sobre a loja</a>
-          <p style="margin-top:10px">${r.regiaoEntrega || ''}</p>
-          <div class="pagamentos-list" style="margin-top:12px">
-            ${(CONFIG.PAGAMENTOS||[]).map(p=>`<span class="pagamento-chip">${p}</span>`).join('')}
-          </div>
         </div>
 
         <div class="footer-col newsletter">
@@ -1937,12 +1941,26 @@ function renderFooter(){
         </div>
       </div>
 
+      <div class="footer-desc-linha">
+        <div class="footer-brand-mark brand-logo-slot">A</div>
+        <div class="footer-desc">${CONFIG.RODAPE_DESC || 'Produtos personalizados feitos sob encomenda em São Paulo. Do primeiro contato à entrega, com cuidado em cada detalhe.'}</div>
+      </div>
+
       <div class="footer-bottom">
-        <span>© ${new Date().getFullYear()} ArznStoreSP Personalizados · Todos os direitos reservados</span>
-        <span>${r.endereco || ''}</span>
+        <span>© ${new Date().getFullYear()} ${(CONFIG.IDENTIDADE&&CONFIG.IDENTIDADE.nomeLoja)||'ArznStoreSP'} · Todos os direitos reservados</span>
+        ${r.cnpj ? `<span>CNPJ: ${r.cnpj}</span>` : ''}
       </div>
     </div>
   `;
+}
+
+// Formata 5511988011285 -> (11) 98801-1285
+function formatarWhats(num){
+  const n = String(num||'').replace(/\D/g,'');
+  const semPais = n.startsWith('55') ? n.slice(2) : n;
+  if(semPais.length===11) return `(${semPais.slice(0,2)}) ${semPais.slice(2,7)}-${semPais.slice(7)}`;
+  if(semPais.length===10) return `(${semPais.slice(0,2)}) ${semPais.slice(2,6)}-${semPais.slice(6)}`;
+  return num;
 }
 
 function assinarNewsletter(){

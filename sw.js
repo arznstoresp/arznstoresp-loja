@@ -1,14 +1,12 @@
 /**
  * Service Worker do catálogo ArznStoreSP
- * Estratégia: cache-first para a casca do app (funciona offline),
- * network-first para dados da API (produtos sempre atualizados quando há rede).
- *
- * IMPORTANTE: ao publicar uma versão nova do catálogo, mude o número
- * de CACHE_NAME (v1 -> v2 ...) para forçar a atualização nos aparelhos.
+ * Estratégia:
+ *  - HTML e dados: NETWORK-FIRST (sempre tenta buscar a versão nova; usa cache só offline)
+ *  - Imagens/ícones locais: cache-first (rápido, funciona offline)
+ *  - Imagens do Supabase e chamadas de API: sempre da rede (nunca cacheia)
  */
-const CACHE_NAME = 'arznstoresp-v2';
+const CACHE_NAME = 'arznstoresp-v4';
 const CASCA = [
-  './catalogo.html',
   './manifest.json',
   './imagens/caneca-porcelana.svg',
   './imagens/caneca-magica.svg',
@@ -18,17 +16,12 @@ const CASCA = [
   './imagens/placa-pvc.svg',
   './imagens/almofada.svg',
   './imagens/squeeze.svg',
-  './imagens/banner-canecas.svg',
-  './imagens/banner-camisetas.svg',
-  './imagens/banner-adesivos.svg',
   './imagens/og-capa.svg',
   './imagens/icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CASCA))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CASCA)));
   self.skipWaiting();
 });
 
@@ -44,8 +37,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Dados dinâmicos (Apps Script / API): network-first, cai pro cache se offline
-  if (url.includes('script.google.com') || url.includes('/exec')) {
+  // Nunca cacheia: Supabase (banco + storage) e qualquer API externa
+  if (url.includes('supabase.co') || url.includes('supabase.in')) {
+    return; // deixa o navegador buscar direto, sempre atualizado
+  }
+
+  // HTML (a página): network-first — sempre pega a versão nova quando há internet
+  const ehHTML = event.request.mode === 'navigate' || url.endsWith('.html');
+  if (ehHTML) {
     event.respondWith(
       fetch(event.request)
         .then((resp) => {
@@ -58,13 +57,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Casca e demais recursos: cache-first
+  // Recursos locais (imagens, ícones): cache-first
   event.respondWith(
     caches.match(event.request).then((cacheResp) => {
       return (
         cacheResp ||
         fetch(event.request).then((resp) => {
-          // Guarda uma cópia dos recursos GET bem-sucedidos
           if (event.request.method === 'GET' && resp.status === 200) {
             const clone = resp.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
